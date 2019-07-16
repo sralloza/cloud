@@ -65,8 +65,8 @@ def index():
     return render_template('minimal.html', form=form)
 
 
-@app.route('/d/<path:filepath>')
-@app.route('/delete/<path:filepath>')
+@app.route('/d/<path:filepath>', methods=['GET'])
+@app.route('/delete/<path:filepath>', methods=['GET'])
 def delete(filepath):
     filepath = ROOT_PATH / filepath
 
@@ -84,9 +84,9 @@ def delete(filepath):
         return f'{META2}<h1>File not found</h1> {filepath.as_posix()}', 400
 
 
-@app.route('/md/<path:folder>')
-@app.route('/mk/<path:folder>')
-@app.route('/mkdir/<path:folder>')
+@app.route('/md/<path:folder>', methods=['GET'])
+@app.route('/mk/<path:folder>', methods=['GET'])
+@app.route('/mkdir/<path:folder>', methods=['GET'])
 def mkdir(folder: str):
     os.makedirs(ROOT_PATH / folder)
 
@@ -94,10 +94,9 @@ def mkdir(folder: str):
     return redirect('/files')
 
 
-@app.route('/mv')
-@app.route('/move')
+@app.route('/mv', methods=['GET'])
+@app.route('/move', methods=['GET'])
 def move():
-
     _from = request.args.get('from')
     _to = request.args.get('to')
 
