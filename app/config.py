@@ -1,5 +1,5 @@
-import platform
 from pathlib import Path
+from platform import system
 
 
 class _Config:
@@ -23,10 +23,13 @@ class _Linux(_Config):
     PLATFORM = 'Linux'
 
 
-if platform.system() == 'Linux':
-    config = _Linux()
-else:
-    config = _Windows()
+def get_current_config():
+    if system() == 'Linux':
+        return _Linux()
+    else:
+        return _Windows()
+
+config = get_current_config()
 
 config.LOG_PATH.touch()
 config.CLOUD_PATH.mkdir(exist_ok=True)
