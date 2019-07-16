@@ -1,0 +1,44 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{%- extends "base.html" %}
+
+{% block title %}
+	Alloza's Cloud
+{% endblock %}
+
+{% block content %}
+	<div class="container">
+		<div class="jumbotron bg-white text-dark">
+			<h1>Alloza's Cloud</h1>
+			
+			<form method="POST" enctype="multipart/form-data" class="form" role="form">
+				<div class="form-group "><label class="control-label" for="files">Files</label>
+					{{ form.hidden_tag() }}
+					{{ form.files(multiple="multiple", class="form control") }}
+				</div>
+				<div class="form-group "><label class="control-label" for="folder">folder</label>
+					{{ form.folder(class="form control") }}
+				</div>
+				{{ form.submit(class="btn btn-default") }}
+			</form>
+			<!--{{ wtf.quick_form(form) }}-->
+		</div>
+	</div>
+
+	<div class="container">
+		<div class="row">
+			<!-- <div class="col-sm-6"> -->
+				<a href="/files">
+					<div class="jumbotron text-center bg-white text-dark">
+						<h3>Files</h3>
+					</div>
+				</a>
+			<!-- </div>
+			<div class="col-sm-6">
+				<div class="jumbotron text-center bg-white text-dark">
+					<h3><a href="/delete">Delete</a></h3>
+				</div>
+			<div> -->
+		</div>
+	<div>
+
+{% endblock %}
