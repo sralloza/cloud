@@ -1,9 +1,7 @@
 from pathlib import Path
-from unittest.mock import patch
+from unittest import mock
 
-import pytest
-
-from app.config import _Linux, _Windows, _Config
+from app.config import _Linux, _Windows, _Config, get_current_config
 
 
 def test_attributes():
@@ -39,3 +37,17 @@ def test_types():
     assert isinstance(_Linux.SUDOERS_PATH, Path)
     assert isinstance(_Linux.PLATFORM, str)
 
+
+def test_get_current_config():
+    with mock.patch('platform.system') as mocker:
+        mocker.return_value = 'Linux'
+        assert isinstance(get_current_config(), _Linux)
+
+    with mock.patch('platform.system') as mocker:
+        mocker.return_value = 'Windows'
+        assert isinstance(get_current_config(), _Windows)
+
+
+def test_setup():
+    # todo test that touch() and mkdir() are called during import
+    pass
