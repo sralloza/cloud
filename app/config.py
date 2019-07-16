@@ -30,3 +30,4 @@ else:
 
 config.LOG_PATH.touch()
 config.CLOUD_PATH.mkdir(exist_ok=True)
+config.SUDOERS_PATH.touch()

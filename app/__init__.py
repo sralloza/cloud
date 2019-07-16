@@ -40,7 +40,6 @@ def index():
 
     folder_choices = [Path(x[0]).relative_to(ROOT_PATH) for x in os.walk(ROOT_PATH)]
 
-    # todo implement admins file
     if get_user() not in get_sudoers():
         def filter_choice(x):
             return not (x.as_posix().startswith('.') and len(x.as_posix()) > 1)
