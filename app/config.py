@@ -1,5 +1,5 @@
+import platform
 from pathlib import Path
-from platform import system
 
 
 class _Config:
@@ -24,10 +24,11 @@ class _Linux(_Config):
 
 
 def get_current_config():
-    if system() == 'Linux':
+    if platform.system() == 'Linux':
         return _Linux()
     else:
         return _Windows()
+
 
 config = get_current_config()
 
