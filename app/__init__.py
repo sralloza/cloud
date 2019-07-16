@@ -106,9 +106,11 @@ def move():
     # todo if "from" or "to" are not in URI, it means that the user has made a mistake, thus
     # todo no redirect should be made. (Delete META2 from below)
     if not _from:
+        log('User %r tried to move, but forgot "from" argument', get_user())
         return f'{META2}<h1>Missing "from" argument</h1>', 400
 
     if not _to:
+        log('User %r tried to move, but forgot "to" argument', get_user())
         return f'{META2}<h1>Missing "to" argument</h1>', 400
 
     real_from = ROOT_PATH / _from
