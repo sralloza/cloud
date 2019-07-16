@@ -7,6 +7,7 @@ from flask import Flask, request, render_template, redirect
 from flask_bootstrap import Bootstrap
 from werkzeug.utils import secure_filename
 
+from .utils import get_sudoers
 from .config import config
 from .forms import UploadForm
 
@@ -40,11 +41,12 @@ def index():
     folder_choices = [Path(x[0]).relative_to(ROOT_PATH) for x in os.walk(ROOT_PATH)]
 
     # todo implement admins file
+    if get_user() not in get_sudoers():
+        def filter_choice(x):
+            return not (x.as_posix().startswith('.') and len(x.as_posix()) > 1)
 
-    if get_user() != 'allo':
-        folders = [x for x in folders if not x.startswith('.')]
-    form.folder.choices = [(0, './'), ] + [(i + 1, x) for i, x in enumerate(folders)]
-    folder_choices = ['./'] + folders
+        folder_choices = [x for x in folder_choices if filter_choice(x)]
+
     folder_choices.sort()
     form.folder.choices = [(i, x.as_posix()) for i, x in enumerate(folder_choices)]
 
