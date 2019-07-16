@@ -28,7 +28,7 @@ Bootstrap(app)
 
 ROOT_PATH = '/srv/private/files/'
 META = '<meta http-equiv="refresh" content="3;url=/files">'
-META2= '<meta http-equiv="refresh" content="5;url=/files">'
+META2 = '<meta http-equiv="refresh" content="5;url=/files">'
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -56,6 +56,7 @@ def index():
 
     log('User %r opened index', get_user())
     return render_template('minimal.html', form=form)
+
 
 @app.route('/d/<path:filepath>')
 @app.route('/delete/<path:filepath>')

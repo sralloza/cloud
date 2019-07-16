@@ -10,6 +10,7 @@ Bootstrap(app)
 
 ROOT_PATH = '/srv/private/files/'
 
+
 def log(x, *args):
     with open('/srv/public/a.dfsfsfe', 'at') as f:
         f.write(x % args + '\n')
@@ -36,6 +37,7 @@ def index():
         return redirect('/')
 
     return render_template('minimal.html', form=form)
+
 
 @app.route('/d/<path:filepath>')
 @app.route('/delete/<path:filepath>')
