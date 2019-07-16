@@ -85,7 +85,7 @@ def delete(filepath):
         return f'{META2}<h1>File not found</h1> {filepath.as_posix()}', 400
 
 
-@app.route('/m/<path:folder>')
+@app.route('/md/<path:folder>')
 @app.route('/mk/<path:folder>')
 @app.route('/mkdir/<path:folder>')
 def mkdir(folder: str):
