@@ -1,32 +1,34 @@
-from flask import Flask, request, render_template, redirect
-from werkzeug import secure_filename
-from .forms import UploadForm
-
-from flask_bootstrap import Bootstrap
 import os
 import shutil
+from pathlib import Path
 from time import asctime
+
+from flask import Flask, request, render_template, redirect
+from flask_bootstrap import Bootstrap
+from werkzeug.utils import secure_filename
+
+from .config import config
+from .forms import UploadForm
 
 
 def log(string, *args):
     timestamp = f'[{asctime()}] - {request.remote_addr} - '
-    with open('/srv/private/web.log', 'at') as f:
+    with config.LOG_PATH.open('at') as f:
         f.write(timestamp + string % args + '\n')
 
 
 def get_user():
     auth = request.authorization
     if not auth:
-        user = None
+        return None
     else:
-        user = auth.username
-    return user
+        return auth.username
 
 
 app = Flask(__name__)
 Bootstrap(app)
 
-ROOT_PATH = '/srv/private/files/'
+ROOT_PATH = config.CLOUD_PATH
 META = '<meta http-equiv="refresh" content="3;url=/files">'
 META2 = '<meta http-equiv="refresh" content="5;url=/files">'
 
@@ -35,23 +37,27 @@ META2 = '<meta http-equiv="refresh" content="5;url=/files">'
 def index():
     form = UploadForm()
 
-    folders = [x[0].replace('\\', '/').replace(ROOT_PATH, '') for x in os.walk(ROOT_PATH)]
-    folders = [x for x in folders if x]
+    folder_choices = [Path(x[0]).relative_to(ROOT_PATH) for x in os.walk(ROOT_PATH)]
+
+    # todo implement admins file
 
     if get_user() != 'allo':
         folders = [x for x in folders if not x.startswith('.')]
     form.folder.choices = [(0, './'), ] + [(i + 1, x) for i, x in enumerate(folders)]
     folder_choices = ['./'] + folders
+    folder_choices.sort()
+    form.folder.choices = [(i, x.as_posix()) for i, x in enumerate(folder_choices)]
 
     if form.submit.data and form.validate_on_submit():
         folder = folder_choices[int(form.folder.data)]
 
         for f in request.files.getlist('files'):
             filename = secure_filename(f.filename)
-            f.save(os.path.join(ROOT_PATH, folder, filename))
+            f.save(ROOT_PATH / folder / filename)
 
         log('User %r upload files to folder %r: %s',
-            get_user(), folder, [secure_filename(x.filename) for x in request.files.getlist('files')])
+            get_user(), folder,
+            [secure_filename(x.filename) for x in request.files.getlist('files')])
         return redirect('/')
 
     log('User %r opened index', get_user())
@@ -61,26 +67,27 @@ def index():
 @app.route('/d/<path:filepath>')
 @app.route('/delete/<path:filepath>')
 def delete(filepath):
-    filepath = os.path.join(ROOT_PATH, filepath)
+    filepath = ROOT_PATH / filepath
 
     try:
-        if os.path.isdir(filepath):
+        if filepath.is_dir():
             shutil.rmtree(filepath)
-            log('User %r removed tree %r', get_user(), filepath)
-            return f'{META}<h1>Tree removed</h1>{filepath}', 200
+            log('User %r removed tree %r', get_user(), filepath.as_posix())
+            return f'{META}<h1>Tree removed</h1>{filepath.as_posix()}', 200
         else:
             os.remove(filepath)
-            log('User %r removed file %r', get_user(), filepath)
-            return f'{META}<h1>File deleted</h1>  {filepath}', 200
+            log('User %r removed file %r', get_user(), filepath.as_posix())
+            return f'{META}<h1>File deleted</h1>  {filepath.as_posix()}', 200
     except FileNotFoundError:
-        log('User %r tried to incorrectly remove %r', get_user(), filepath)
-        return f'{META2}<h1>File not found</h1> {filepath}', 400
+        log('User %r tried to incorrectly remove %r', get_user(), filepath.as_posix())
+        return f'{META2}<h1>File not found</h1> {filepath.as_posix()}', 400
 
 
 @app.route('/m/<path:folder>')
+@app.route('/mk/<path:folder>')
 @app.route('/mkdir/<path:folder>')
 def mkdir(folder: str):
-    os.makedirs(os.path.join(ROOT_PATH, folder))
+    os.makedirs(ROOT_PATH / folder)
 
     log('User %r made dir %r', get_user(), folder)
     return redirect('/files')
@@ -94,19 +101,21 @@ def move():
     _from = request.args.get('from')
     _to = request.args.get('to')
 
+    # todo if "from" or "to" are not in URI, it means that the user has made a mistake, thus
+    # todo no redirect should be made. (Delete META2 from below)
     if not _from:
         return f'{META2}<h1>Missing "from" argument</h1>', 400
 
     if not _to:
         return f'{META2}<h1>Missing "to" argument</h1>', 400
 
-    real_from = os.path.join(ROOT_PATH, _from).replace('\\', '/')
-    real_to = os.path.join(ROOT_PATH, _to).replace('\\', '/')
+    real_from = ROOT_PATH / _from
+    real_to = ROOT_PATH / _to
 
     try:
         shutil.move(real_from, real_to)
         log('User %r moved file %r to %r', get_user(), _from, _to)
         return f'{META}<h1>File moved correctly</h1>', 200
     except FileNotFoundError as err:
-        log('User %r tried to move file %r to %r, but failed', get_user(), _from, _to)
+        log('User %r tried to move file %r to %r, but failed (%r)', get_user(), _from, _to, err)
         return f'{META2} File not found', 400
