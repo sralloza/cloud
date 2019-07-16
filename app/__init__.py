@@ -98,18 +98,15 @@ def mkdir(folder: str):
 @app.route('/mv')
 @app.route('/move')
 def move():
-    # return '<h1>Unimplemented</h1>'
 
     _from = request.args.get('from')
     _to = request.args.get('to')
 
-    # todo if "from" or "to" are not in URI, it means that the user has made a mistake, thus
-    # todo no redirect should be made. (Delete META2 from below)
     if not _from:
-        return f'{META2}<h1>Missing "from" argument</h1>', 400
+        return '<h1>Missing "from" argument</h1>', 400
 
     if not _to:
-        return f'{META2}<h1>Missing "to" argument</h1>', 400
+        return '<h1>Missing "to" argument</h1>', 400
 
     real_from = ROOT_PATH / _from
     real_to = ROOT_PATH / _to
