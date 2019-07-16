@@ -7,9 +7,9 @@ from flask import Flask, request, render_template, redirect
 from flask_bootstrap import Bootstrap
 from werkzeug.utils import secure_filename
 
-from .utils import get_sudoers
 from .config import config
 from .forms import UploadForm
+from .utils import get_sudoers
 
 
 def log(string, *args):
@@ -34,10 +34,7 @@ META = '<meta http-equiv="refresh" content="3;url=/files">'
 META2 = '<meta http-equiv="refresh" content="5;url=/files">'
 
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    form = UploadForm()
-
+def get_folders():
     folder_choices = [Path(x[0]).relative_to(ROOT_PATH) for x in os.walk(ROOT_PATH)]
 
     if get_user() not in get_sudoers():
@@ -47,22 +44,37 @@ def index():
         folder_choices = [x for x in folder_choices if filter_choice(x)]
 
     folder_choices.sort()
+    return folder_choices
+
+
+@app.route('/', methods=['GET'])
+def index():
+    form = UploadForm()
+
+    folder_choices = get_folders()
     form.folder.choices = [(i, x.as_posix()) for i, x in enumerate(folder_choices)]
-
-    if form.submit.data and form.validate_on_submit():
-        folder = folder_choices[int(form.folder.data)]
-
-        for f in request.files.getlist('files'):
-            filename = secure_filename(f.filename)
-            f.save(ROOT_PATH / folder / filename)
-
-        log('User %r upload files to folder %r: %s',
-            get_user(), folder,
-            [secure_filename(x.filename) for x in request.files.getlist('files')])
-        return redirect('/')
 
     log('User %r opened index', get_user())
     return render_template('minimal.html', form=form)
+
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    form = UploadForm()
+
+    folder_choices = get_folders()
+    folder = folder_choices[int(form.folder.data)]
+
+    for f in request.files.getlist('files'):
+        filename = secure_filename(f.filename)
+        filename = ROOT_PATH / folder / filename
+        f.save(filename.as_posix())
+
+    log(
+        'User %r upload files to folder %r: %s', get_user(), folder,
+        [secure_filename(x.filename) for x in request.files.getlist('files')]
+    )
+    return redirect('/')
 
 
 @app.route('/d/<path:filepath>', methods=['GET'])

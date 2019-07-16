@@ -9,8 +9,8 @@
 	<div class="container">
 		<div class="jumbotron bg-white text-dark">
 			<h1>Alloza's Cloud</h1>
-			
-			<form method="POST" enctype="multipart/form-data" class="form" role="form">
+
+			<form method="POST" enctype="multipart/form-data" class="form" role="form" action="/upload">
 				<div class="form-group "><label class="control-label" for="files">Files</label>
 					{{ form.hidden_tag() }}
 					{{ form.files(multiple="multiple", class="form control") }}
