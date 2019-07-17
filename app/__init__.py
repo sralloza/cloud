@@ -7,14 +7,14 @@ from flask import Flask, request, render_template, redirect
 from flask_bootstrap import Bootstrap
 from werkzeug.utils import secure_filename
 
-from .config import config
+from .config import cfg
 from .forms import UploadForm
 from .utils import get_sudoers
 
 
 def log(string, *args):
     timestamp = f'[{asctime()}] - {request.remote_addr} - '
-    with config.LOG_PATH.open('at') as f:
+    with cfg.LOG_PATH.open('at') as f:
         f.write(timestamp + string % args + '\n')
 
 
@@ -29,7 +29,7 @@ def get_user():
 app = Flask(__name__)
 Bootstrap(app)
 
-ROOT_PATH = config.CLOUD_PATH
+ROOT_PATH = cfg.CLOUD_PATH
 META = '<meta http-equiv="refresh" content="3;url=/files">'
 META2 = '<meta http-equiv="refresh" content="5;url=/files">'
 

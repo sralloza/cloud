@@ -8,6 +8,12 @@ class _Config:
     SUDOERS_PATH = Path('')
     PLATFORM = ''
 
+    @staticmethod
+    def setup_config():
+        cfg.LOG_PATH.touch()
+        cfg.CLOUD_PATH.mkdir(exist_ok=True)
+        cfg.SUDOERS_PATH.touch()
+
 
 class _Windows(_Config):
     LOG_PATH = Path('D:\\.scripts\\cloud\\web.log')
@@ -30,8 +36,5 @@ def get_current_config():
         return _Windows()
 
 
-config = get_current_config()
-
-config.LOG_PATH.touch()
-config.CLOUD_PATH.mkdir(exist_ok=True)
-config.SUDOERS_PATH.touch()
+cfg = get_current_config()
+cfg.setup_config()
