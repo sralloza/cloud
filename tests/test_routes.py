@@ -31,7 +31,7 @@ class TestUpload:
         log_mock = mock.patch('app.log').start()
         get_user_mock = mock.patch('app.get_user', return_value='user-foo').start()
 
-        cfg_mock.CLOUD_PATH = '/cloud'
+        cfg_mock.CLOUD_PATH = Path('/cloud')
 
         yield cfg_mock, file_storage_mock, get_folders_mock, log_mock, get_user_mock
 
@@ -137,4 +137,122 @@ class TestUpload:
         assert rv.status_code == 400
         assert b'Invalid index folder' in rv.data
         file_storage_mock.assert_not_called()
+
+    def test_methods(self, client, upload_mocks):
+        rv = client.post('/upload')
+        assert rv.status_code in [200, 400]
+
+        assert client.get('/upload').status_code == 405
+        assert client.put('/upload').status_code == 405
+        assert client.delete('/upload').status_code == 405
+        assert client.patch('/upload').status_code == 405
+
+
+class TestDelete:
+    filepaths = ['hello/world', 'a/b/c/d/e/f/g', 'hi/peter/how/are-you.file', 'simple']
+
+    @pytest.fixture(autouse=True)
+    def delete_mocks(self):
+        remove_mock = mock.patch('os.remove').start()
+        cfg_mock = mock.patch('app.cfg').start()
+        rmtree_mock = mock.patch('shutil.rmtree').start()
+        is_dir_mock = mock.patch('pathlib.Path.is_dir').start()
+        get_user_mock = mock.patch('app.get_user', return_value='user-foo').start()
+        log_mock = mock.patch('app.log').start()
+
+        cfg_mock.CLOUD_PATH = Path('/cloud')
+        yield remove_mock, cfg_mock, rmtree_mock, is_dir_mock, get_user_mock, log_mock
+
+        mock.patch.stopall()
+
+    @pytest.fixture(params=filepaths)
+    def filepath(self, request):
+        return request.param
+
+    def test_delete_file(self, delete_mocks, client, filepath):
+        remove_mock, cfg_mock, rmtree_mock, is_dir_mock, get_user_mock, log_mock = delete_mocks
+        is_dir_mock.return_value = False
+
+        url = f'/d/{filepath}/'
+        delete_path = Path(f'/cloud/{filepath}')
+
+        rv = client.get(url)
+        assert rv.status_code == 200
+
+        is_dir_mock.assert_called_once()
+        remove_mock.assert_called_once_with(delete_path)
+        rmtree_mock.assert_not_called()
+        log_mock.assert_called_once_with(
+            'User %r removed file %r', 'user-foo', delete_path.as_posix()
+        )
+
+        assert b'<meta http-equiv="refresh" content="3;url=/files">' in rv.data
+        assert b'<h1>File deleted</h1>' in rv.data
+        assert delete_path.as_posix().encode() in rv.data
+
+    def test_delete_folder(self, delete_mocks, client, filepath):
+        remove_mock, cfg_mock, rmtree_mock, is_dir_mock, get_user_mock, log_mock = delete_mocks
+        is_dir_mock.return_value = True
+
+        url = f'/d/{filepath}/'
+        delete_path = Path(f'/cloud/{filepath}')
+
+        rv = client.get(url)
+        assert rv.status_code == 200
+
+        is_dir_mock.assert_called_once()
+        remove_mock.assert_not_called()
+        rmtree_mock.assert_called_once_with(delete_path)
+        log_mock.assert_called_once_with(
+            'User %r removed tree %r', 'user-foo', delete_path.as_posix()
+        )
+
+        assert b'<meta http-equiv="refresh" content="3;url=/files">' in rv.data
+        assert b'<h1>Tree removed</h1>' in rv.data
+        assert delete_path.as_posix().encode() in rv.data
+
+    def test_delete_non_existing_file(self, delete_mocks, client, filepath):
+        remove_mock, cfg_mock, rmtree_mock, is_dir_mock, get_user_mock, log_mock = delete_mocks
+        is_dir_mock.return_value = False
+        remove_mock.side_effect = FileNotFoundError
+
+        url = f'/d/{filepath}/'
+        delete_path = Path(f'/cloud/{filepath}')
+
+        rv = client.get(url)
+        # assert rv.status_code == 404
+
+        is_dir_mock.assert_called_once()
+        remove_mock.assert_called_once_with(delete_path)
+        rmtree_mock.assert_not_called()
+        log_mock.assert_called_once_with(
+            'User %r tried to incorrectly remove %r', 'user-foo', delete_path.as_posix()
+        )
+
+        assert b'<meta http-equiv="refresh" content="5;url=/files">' in rv.data
+        assert b'<h1>File not found</h1>' in rv.data
+        assert delete_path.as_posix().encode() in rv.data
+
+
+    def test_delete_non_existing_folder(self, delete_mocks, client, filepath):
+        remove_mock, cfg_mock, rmtree_mock, is_dir_mock, get_user_mock, log_mock = delete_mocks
+        is_dir_mock.return_value = True
+        rmtree_mock.side_effect = FileNotFoundError
+
+        url = f'/d/{filepath}/'
+        delete_path = Path(f'/cloud/{filepath}')
+
+        rv = client.get(url)
+        # assert rv.status_code == 404
+
+        is_dir_mock.assert_called_once()
+        remove_mock.assert_not_called()
+        rmtree_mock.assert_called_once_with(delete_path)
+        log_mock.assert_called_once_with(
+            'User %r tried to incorrectly remove %r', 'user-foo', delete_path.as_posix()
+        )
+
+        assert b'<meta http-equiv="refresh" content="5;url=/files">' in rv.data
+        assert b'<h1>File not found</h1>' in rv.data
+        assert delete_path.as_posix().encode() in rv.data
 
