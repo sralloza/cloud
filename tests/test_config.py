@@ -48,15 +48,13 @@ def test_get_current_config():
         assert isinstance(get_current_config(), _Windows)
 
 
-def test_setup_config():
-    # todo test that touch() and mkdir() are called during import
+@mock.patch('platform.system')
+def test_setup_config(mocker):
+    mocker.return_value = 'Linux'
+    assert isinstance(get_current_config(), _Linux)
 
-    with mock.patch('platform.system') as mocker:
-        mocker.return_value = 'Linux'
-        assert isinstance(get_current_config(), _Linux)
-
-        with mock.patch('app.config.cfg') as mocker:
-            get_current_config().setup_config()
-            mocker.LOG_PATH.touch.assert_called_once()
-            mocker.CLOUD_PATH.mkdir.assert_called_once_with(exist_ok=True)
-            mocker.SUDOERS_PATH.touch.assert_called_once()
+    with mock.patch('app.config.cfg') as mocker:
+        get_current_config().setup_config()
+        mocker.LOG_PATH.touch.assert_called_once()
+        mocker.CLOUD_PATH.mkdir.assert_called_once_with(exist_ok=True)
+        mocker.SUDOERS_PATH.touch.assert_called_once()
