@@ -8,8 +8,7 @@ from werkzeug.utils import secure_filename
 
 from .config import cfg
 from .forms import UploadForm
-from .utils import get_sudoers, get_user, log
-
+from .utils import get_sudoers, get_user, log, get_folders
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -17,19 +16,6 @@ Bootstrap(app)
 ROOT_PATH = cfg.CLOUD_PATH
 META = '<meta http-equiv="refresh" content="3;url=/files">'
 META2 = '<meta http-equiv="refresh" content="5;url=/files">'
-
-
-def get_folders():
-    folder_choices = [Path(x[0]).relative_to(ROOT_PATH) for x in os.walk(ROOT_PATH)]
-
-    if get_user() not in get_sudoers():
-        def filter_choice(x):
-            return not (x.as_posix().startswith('.') and len(x.as_posix()) > 1)
-
-        folder_choices = [x for x in folder_choices if filter_choice(x)]
-
-    folder_choices.sort()
-    return folder_choices
 
 
 @app.route('/', methods=['GET'])

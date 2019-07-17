@@ -1,5 +1,7 @@
 import json
+import os
 import warnings
+from pathlib import Path
 from time import asctime
 
 from flask import request
@@ -35,3 +37,16 @@ def get_user():
         return None
     else:
         return auth.username
+
+
+def get_folders():
+    folder_choices = [Path(x[0]).relative_to(cfg.CLOUD_PATH) for x in os.walk(cfg.CLOUD_PATH)]
+
+    if get_user() not in get_sudoers():
+        def filter_choice(x):
+            return not (x.as_posix().startswith('.') and len(x.as_posix()) > 1)
+
+        folder_choices = [x for x in folder_choices if filter_choice(x)]
+
+    folder_choices.sort()
+    return folder_choices
