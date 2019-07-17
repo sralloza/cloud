@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 
-from app.utils import SudoersWarning, get_sudoers, log, get_user
+from app.utils import SudoersWarning, get_sudoers, log, get_user, get_folders
 
 
 def test_warning():
@@ -57,3 +57,35 @@ def test_get_user(request_mock):
 
     request_mock.authorization = mock.Mock(username='foo')
     assert get_user() == 'foo'
+
+
+@pytest.fixture
+def folders_mocker():
+    cfg_mock = mock.patch('app.utils.cfg', spec=True).start()
+    os_walk_mock = mock.patch('os.walk', spec=True).start()
+    get_user_mock = mock.patch('app.utils.get_user', spec=True).start()
+    get_sudoers_mock = mock.patch('app.utils.get_sudoers', spec=True).start()
+
+    yield cfg_mock, os_walk_mock, get_user_mock, get_sudoers_mock
+
+    mock.patch.stopall()
+
+
+def test_get_folders(folders_mocker):
+    cfg_mock, os_walk_mock, get_user_mock, get_sudoers_mock = folders_mocker
+
+    cfg_mock.CLOUD_PATH = '/test'
+    os_walk_mock.return_value = [
+        ('/test/folder-1',), ('/test/folder-1/subfolder-1.2/subsubfolder-1.2.1',),
+        ('/test/folder-1/subfolder-1.1',), ('/test/folder-1/subfolder-1.2',),
+        ('/test/folder-2',), ('/test/folder-2/subfolder-2.1',)
+    ]
+    get_user_mock.return_value = None
+    get_sudoers_mock.return_value = []
+
+    expected = [
+        'folder-1', 'folder-1/subfolder-1.1', 'folder-1/subfolder-1.2',
+        'folder-1/subfolder-1.2/subsubfolder-1.2.1', 'folder-2', 'folder-2/subfolder-2.1'
+    ]
+
+    assert [x.as_posix() for x in get_folders()] == expected
