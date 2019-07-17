@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 
-from app.utils import SudoersWarning, get_sudoers, log
+from app.utils import SudoersWarning, get_sudoers, log, get_user
 
 
 def test_warning():
@@ -48,3 +48,12 @@ def test_log(asctime_mock, request_mock, cfg_mock):
     assert asctime_mock.call_count == 2
     fp.write.assert_called_with(args)
     assert fp.write.call_count == 2
+
+
+@mock.patch('app.utils.request', spec=True)
+def test_get_user(request_mock):
+    request_mock.authorization = None
+    assert get_user() is None
+
+    request_mock.authorization = mock.Mock(username='foo')
+    assert get_user() == 'foo'
