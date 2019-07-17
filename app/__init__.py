@@ -1,6 +1,5 @@
 import os
 import shutil
-from pathlib import Path
 
 from flask import Flask, request, render_template, redirect
 from flask_bootstrap import Bootstrap
@@ -13,7 +12,6 @@ from .utils import get_sudoers, get_user, log, get_folders
 app = Flask(__name__)
 Bootstrap(app)
 
-ROOT_PATH = cfg.CLOUD_PATH
 META = '<meta http-equiv="refresh" content="3;url=/files">'
 META2 = '<meta http-equiv="refresh" content="5;url=/files">'
 
@@ -38,7 +36,7 @@ def upload():
 
     for f in request.files.getlist('files'):
         filename = secure_filename(f.filename)
-        filename = ROOT_PATH / folder / filename
+        filename = cfg.CLOUD_PATH / folder / filename
         f.save(filename.as_posix())
 
     log(
@@ -51,7 +49,7 @@ def upload():
 @app.route('/d/<path:filepath>', methods=['GET'])
 @app.route('/delete/<path:filepath>', methods=['GET'])
 def delete(filepath):
-    filepath = ROOT_PATH / filepath
+    filepath = cfg.CLOUD_PATH / filepath
 
     try:
         if filepath.is_dir():
@@ -71,7 +69,7 @@ def delete(filepath):
 @app.route('/mk/<path:folder>', methods=['GET'])
 @app.route('/mkdir/<path:folder>', methods=['GET'])
 def mkdir(folder: str):
-    os.makedirs(ROOT_PATH / folder)
+    os.makedirs(cfg.CLOUD_PATH / folder)
 
     log('User %r made dir %r', get_user(), folder)
     return redirect('/files')
@@ -91,8 +89,8 @@ def move():
         log('User %r tried to move, but forgot "to" argument', get_user())
         return '<h1>Missing "to" argument</h1>', 400
 
-    real_from = ROOT_PATH / _from
-    real_to = ROOT_PATH / _to
+    real_from = cfg.CLOUD_PATH / _from
+    real_to = cfg.CLOUD_PATH / _to
 
     try:
         shutil.move(real_from, real_to)
