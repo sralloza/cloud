@@ -1,5 +1,8 @@
 import json
 import warnings
+from time import asctime
+
+from flask import request
 
 from .config import config
 
@@ -18,3 +21,17 @@ def get_sudoers():
         except FileNotFoundError:
             warnings.warn('Sudoers file not found', SudoersWarning)
             return []
+
+
+def log(string, *args):
+    timestamp = f'[{asctime()}] - {request.remote_addr} - '
+    with config.LOG_PATH.open('at') as f:
+        f.write(timestamp + string % args + '\n')
+
+
+def get_user():
+    auth = request.authorization
+    if not auth:
+        return None
+    else:
+        return auth.username

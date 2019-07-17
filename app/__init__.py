@@ -1,7 +1,6 @@
 import os
 import shutil
 from pathlib import Path
-from time import asctime
 
 from flask import Flask, request, render_template, redirect
 from flask_bootstrap import Bootstrap
@@ -10,20 +9,6 @@ from werkzeug.utils import secure_filename
 from .config import config
 from .forms import UploadForm
 from .utils import get_sudoers
-
-
-def log(string, *args):
-    timestamp = f'[{asctime()}] - {request.remote_addr} - '
-    with config.LOG_PATH.open('at') as f:
-        f.write(timestamp + string % args + '\n')
-
-
-def get_user():
-    auth = request.authorization
-    if not auth:
-        return None
-    else:
-        return auth.username
 
 
 app = Flask(__name__)
