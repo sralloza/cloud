@@ -182,6 +182,7 @@ class TestDelete:
         is_dir_mock.assert_called_once()
         remove_mock.assert_called_once_with(delete_path)
         rmtree_mock.assert_not_called()
+        get_user_mock.assert_called_once_with()
         log_mock.assert_called_once_with(
             'User %r removed file %r', 'user-foo', delete_path.as_posix()
         )
@@ -203,6 +204,7 @@ class TestDelete:
         is_dir_mock.assert_called_once()
         remove_mock.assert_not_called()
         rmtree_mock.assert_called_once_with(delete_path)
+        get_user_mock.assert_called_once_with()
         log_mock.assert_called_once_with(
             'User %r removed tree %r', 'user-foo', delete_path.as_posix()
         )
@@ -225,6 +227,7 @@ class TestDelete:
         is_dir_mock.assert_called_once()
         remove_mock.assert_called_once_with(delete_path)
         rmtree_mock.assert_not_called()
+        get_user_mock.assert_called_once_with()
         log_mock.assert_called_once_with(
             'User %r tried to incorrectly remove %r', 'user-foo', delete_path.as_posix()
         )
@@ -232,7 +235,6 @@ class TestDelete:
         assert b'<meta http-equiv="refresh" content="5;url=/files">' in rv.data
         assert b'<h1>File not found</h1>' in rv.data
         assert delete_path.as_posix().encode() in rv.data
-
 
     def test_delete_non_existing_folder(self, delete_mocks, client, filepath):
         remove_mock, cfg_mock, rmtree_mock, is_dir_mock, get_user_mock, log_mock = delete_mocks
@@ -248,6 +250,7 @@ class TestDelete:
         is_dir_mock.assert_called_once()
         remove_mock.assert_not_called()
         rmtree_mock.assert_called_once_with(delete_path)
+        get_user_mock.assert_called_once_with()
         log_mock.assert_called_once_with(
             'User %r tried to incorrectly remove %r', 'user-foo', delete_path.as_posix()
         )
@@ -255,4 +258,34 @@ class TestDelete:
         assert b'<meta http-equiv="refresh" content="5;url=/files">' in rv.data
         assert b'<h1>File not found</h1>' in rv.data
         assert delete_path.as_posix().encode() in rv.data
+
+
+@pytest.fixture
+def mkdir_mocks():
+    makedirs_mock = mock.patch('os.makedirs').start()
+    cfg_mock = mock.patch('app.cfg').start()
+    log_mock = mock.patch('app.log').start()
+    get_user_mock = mock.patch('app.get_user', return_value='user-foo').start()
+    cfg_mock.CLOUD_PATH = Path('/cloud')
+
+    yield makedirs_mock, cfg_mock, log_mock, get_user_mock
+    mock.patch.stopall()
+
+
+@pytest.fixture(params=TestDelete.filepaths)
+def filepath(request):
+    return request.param
+
+
+def test_mkdir(client, mkdir_mocks, filepath):
+    makedirs_mock, cfg_mock, log_mock, get_user_mock = mkdir_mocks
+
+    url = f'/mkdir/{filepath}'
+    client.get(url)
+
+    make_path = Path(f'/cloud/{filepath}')
+
+    makedirs_mock.assert_called_once_with(make_path)
+    log_mock.assert_called_once_with('User %r made dir %r', 'user-foo', filepath)
+    get_user_mock.assert_called_once_with()
 
