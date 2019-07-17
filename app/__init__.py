@@ -31,10 +31,21 @@ def index():
 def upload():
     form = UploadForm()
 
-    folder_choices = get_folders()
-    folder = folder_choices[int(form.folder.data)]
+    if form.folder.data is None:
+        return f'{META2}<h1>No folder supplied or an invalid folder was supplied<h1>', 400
 
-    for f in request.files.getlist('files'):
+    folder_choices = get_folders()
+
+    try:
+        folder = folder_choices[int(form.folder.data)]
+    except IndexError:
+        return f'{META2}<h1>Invalid index folder<h2>', 400
+    files = request.files.getlist('files')
+
+    if not files:
+        return f'{META2}<h1>No files supplied</h1>', 400
+
+    for f in files:
         filename = secure_filename(f.filename)
         filename = cfg.CLOUD_PATH / folder / filename
         f.save(filename.as_posix())
