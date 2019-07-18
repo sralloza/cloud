@@ -11,3 +11,8 @@ def client():
 
     with app.app_context():
         yield testing_client
+
+@pytest.fixture(scope='module')
+def create_app():
+    app.secret_key = 'asdfjewpoirjopfnñcxvkjs0i49309'
+    yield app
