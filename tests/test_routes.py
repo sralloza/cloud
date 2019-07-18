@@ -1,8 +1,16 @@
 import io
+from itertools import product
 from pathlib import Path
 from unittest import mock
 
 import pytest
+
+from app import META, META2
+
+filepaths = [
+    'hello/world', 'a/b/c/d/e/f/g', 'hi/peter/how/are-you.file', 'simple',
+    'complex/$5'
+]
 
 
 def test_index(client):
@@ -149,8 +157,6 @@ class TestUpload:
 
 
 class TestDelete:
-    filepaths = ['hello/world', 'a/b/c/d/e/f/g', 'hi/peter/how/are-you.file', 'simple']
-
     @pytest.fixture(autouse=True)
     def delete_mocks(self):
         remove_mock = mock.patch('os.remove').start()
@@ -272,7 +278,7 @@ def mkdir_mocks():
     mock.patch.stopall()
 
 
-@pytest.fixture(params=TestDelete.filepaths)
+@pytest.fixture(params=filepaths)
 def filepath(request):
     return request.param
 
@@ -288,4 +294,56 @@ def test_mkdir(client, mkdir_mocks, filepath):
     makedirs_mock.assert_called_once_with(make_path)
     log_mock.assert_called_once_with('User %r made dir %r', 'user-foo', filepath)
     get_user_mock.assert_called_once_with()
+
+
+class TestMove:
+    @pytest.fixture
+    def move_mocks(self):
+        log_mock = mock.patch('app.log').start()
+        get_user_mock = mock.patch('app.get_user', return_value='user-bar').start()
+        move_mock = mock.patch('shutil.move').start()
+
+        yield log_mock, get_user_mock, move_mock
+        mock.patch.stopall()
+
+    @pytest.mark.parametrize('_to', filepaths)
+    def test_without_from(self, move_mocks, client, _to):
+        log_mock, get_user_mock, move_mock = move_mocks
+
+        mv_url = f'/mv?to={_to}'
+        rv = client.get(mv_url)
+        assert rv.status_code == 400
+
+        log_mock.assert_called_once_with('User %r tried to move, but forgot "from" argument',
+                                         'user-bar')
+        assert b'Missing "from" argument' in rv.data
+        assert META.encode() not in rv.data
+        assert META2.encode() not in rv.data
+
+    @pytest.mark.parametrize('_from', filepaths)
+    def test_without_to(self, move_mocks, client, _from):
+        log_mock, get_user_mock, move_mock = move_mocks
+
+        move_url = f'/mv?from={_from}'
+        rv = client.get(move_url)
+        assert rv.status_code == 400
+
+        log_mock.assert_called_once_with('User %r tried to move, but forgot "to" argument',
+                                         'user-bar')
+        assert b'Missing "to" argument' in rv.data
+        assert META.encode() not in rv.data
+        assert META2.encode() not in rv.data
+
+    @pytest.mark.parametrize('_to, _from', product(filepaths, filepaths))
+    def test_move_ok(self, move_mocks, client, _to, _from):
+        log_mock, get_user_mock, move_mock = move_mocks
+
+        move_url = f'/mv?from={_from}&to={_to}'
+        rv = client.get(move_url)
+        assert rv.status_code == 200
+
+        log_mock.assert_called_once_with('User %r moved file %r to %r', 'user-bar', _from, _to)
+        assert b'File moved correctly' in rv.data
+        assert META.encode() in rv.data
+        assert META2.encode() not in rv.data
 
