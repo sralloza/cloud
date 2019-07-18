@@ -23,9 +23,9 @@ class _Windows(_Config):
 
 
 class _Linux(_Config):
-    LOG_PATH = Path('/srv/private/web.log')
-    CLOUD_PATH = Path('/srv/private/files')
-    SUDOERS_PATH = Path('/srv/private/sudoers.json')
+    LOG_PATH = Path('/srv/cloud/web.log')
+    CLOUD_PATH = Path('/srv/cloud/files')
+    SUDOERS_PATH = Path('/srv/cloud/sudoers.json')
     PLATFORM = 'Linux'
 
 
