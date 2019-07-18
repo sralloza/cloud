@@ -347,3 +347,26 @@ class TestMove:
         assert META.encode() in rv.data
         assert META2.encode() not in rv.data
 
+
+@pytest.fixture()
+def endpoint_to_function(create_app):
+    app = create_app
+
+    def foo(endpoint):
+        for func, rule_list in app.url_map._rules_by_endpoint.items():
+            for rule in rule_list:
+                if str(rule) == endpoint:
+                    return func
+
+    return foo
+
+
+def test_urls(endpoint_to_function):
+    e_to_f = endpoint_to_function
+
+    assert e_to_f('/') == 'index'
+    assert e_to_f('/upload') == 'upload'
+    assert e_to_f('/d/<path:filepath>') == e_to_f('/delete/<path:filepath>') == 'delete'
+    assert e_to_f('/md/<path:folder>') == e_to_f('/mk/<path:folder>') == \
+           e_to_f('/md/<path:folder>') == 'mkdir'
+    assert e_to_f('/mv') == e_to_f('/move') == 'move'
