@@ -9,7 +9,7 @@ from app import META, META2
 
 filepaths = [
     'hello/world', 'a/b/c/d/e/f/g', 'hi/peter/how/are-you.file', 'simple',
-    'complex/$5'
+    'complex/$5', 'p123/cdcdsc/../plt', '=sdf)/jk', '^d/-_df/asd', '(~€_;/.@·![]/´{}ç¿/8'
 ]
 
 
