@@ -16,7 +16,7 @@ $(document).ready(function() {
     initDropbox();
 
     // Set up the handler for the file input box.
-    $("#file-picker").on("change", function() {
+    $("#file-input").on("change", function() {
         handleFiles(this.files);
     });
 
