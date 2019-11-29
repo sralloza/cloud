@@ -5,7 +5,8 @@
 // Constants
 var MAX_UPLOAD_FILE_SIZE = 1024*1024; // 1 MB
 var UPLOAD_URL = "/upload";
-var NEXT_URL   = "/files/";
+// var NEXT_URL   = "/files/";
+var NEXT_URL   = "/";
 
 // List of pending files to handle when the Upload button is finally clicked.
 var PENDING_FILES  = [];
@@ -16,7 +17,7 @@ $(document).ready(function() {
     initDropbox();
 
     // Set up the handler for the file input box.
-    $("#file-input").on("change", function() {
+    $("#file-picker").on("change", function() {
         handleFiles(this.files);
     });
 
@@ -93,7 +94,8 @@ function doUpload() {
             else {
                 // Ok! Get the UUID.
                 var uuid = data.msg;
-                window.location = NEXT_URL + uuid;
+                // window.location = NEXT_URL + uuid;
+                window.location = NEXT_URL
             }
         },
     });
