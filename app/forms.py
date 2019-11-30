@@ -3,6 +3,6 @@ from wtforms import SubmitField, SelectField, MultipleFileField
 
 
 class UploadForm(Form):
-    files = MultipleFileField('Files')
-    folder = SelectField('folder', coerce=int)
-    submit = SubmitField('Upload')
+    files = MultipleFileField('files')
+    folder = SelectField('folder', coerce=str)
+    submit = SubmitField('upload')
