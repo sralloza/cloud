@@ -20,17 +20,16 @@ META2 = '<meta http-equiv="refresh" content="5;url=/files">'
 @app.route("/")
 def new_route():
     folder_choices = get_folders()
-
     log("User %r opened index", get_user())
     return render_template("new.html", folders=folder_choices)
 
 
 @app.route("/upload", methods=["POST"])
 def upload():
-    print(request.form.to_dict(flat=False))
+    form = UploadForm()
 
-    file = request.form.get("file")
-    folder = request.form.get("folder")
+    files = form.files.data
+    folder = form.folder.data
 
     folder_choices = [x.as_posix() for x in get_folders()]
 
@@ -40,10 +39,11 @@ def upload():
     folder = Path(folder).as_posix()
     if folder not in folder_choices:
         return {"message": "Invalid folder: %r" % folder}, 400
-    if not file:
+    if not files:
         return {"message": "No files supplied"}, 400
 
-    save_file(file, folder)
+    for file in files:
+        save_file(file, folder)
 
     return make_response(jsonify({"message": "File uploaded"}), 200)
 
@@ -58,7 +58,6 @@ def save_file(file, folder):
         get_user(),
         folder,
         secure_filename(file.filename)
-        # [secure_filename(x.filename) for x in request.files.getlist("files")],
     )
     return redirect("/")
 
