@@ -1,12 +1,14 @@
 import platform
 from pathlib import Path
+import json
 
 
 class _Config:
-    LOG_PATH = Path('')
-    CLOUD_PATH = Path('')
-    SUDOERS_PATH = Path('')
-    PLATFORM = ''
+    LOG_PATH = Path(__file__).parent.with_name("web.log")
+    CLOUD_PATH = Path(__file__).parent.with_name("files")
+    SUDOERS_PATH = Path(__file__).parent.with_name("sudoers.json")
+    HIDE_PATH = Path(__file__).parent.with_name("hide.json")
+    PLATFORM = ""
 
     @staticmethod
     def setup_config():
@@ -14,23 +16,20 @@ class _Config:
         cfg.CLOUD_PATH.mkdir(exist_ok=True)
         cfg.SUDOERS_PATH.touch()
 
+        if not cfg.HIDE_PATH.exists():
+            cfg.HIDE_PATH.write_text(json.dumps(list()))
+
 
 class _Windows(_Config):
-    LOG_PATH = Path('D:\\.scripts\\cloud\\web.log')
-    CLOUD_PATH = Path('D:\\.scripts\\cloud\\files')
-    SUDOERS_PATH = Path('D:\\.scripts\\cloud\\sudoers.json')
-    PLATFORM = 'Windows'
+    PLATFORM = "Windows"
 
 
 class _Linux(_Config):
-    LOG_PATH = Path('/srv/cloud/web.log')
-    CLOUD_PATH = Path('/srv/cloud/files')
-    SUDOERS_PATH = Path('/srv/cloud/sudoers.json')
-    PLATFORM = 'Linux'
+    PLATFORM = "Linux"
 
 
 def get_current_config():
-    if platform.system() == 'Linux':
+    if platform.system() == "Linux":
         return _Linux()
     else:
         return _Windows()

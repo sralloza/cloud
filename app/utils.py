@@ -1,7 +1,10 @@
 import json
 import os
+import re
 import warnings
 from pathlib import Path
+from random import choice
+from string import ascii_letters, digits
 from time import asctime
 
 from flask import request
@@ -13,16 +16,57 @@ class SudoersWarning(Warning):
     pass
 
 
+class HidesWarning(Warning):
+    pass
+
+
 def get_sudoers():
     try:
         with cfg.SUDOERS_PATH.open() as f:
             return json.load(f)
-    except json.JSONDecodeError as err:
-        warnings.warn(f"json decode error: {err}", SudoersWarning)
+    except json.JSONDecodeError as exc:
+        warnings.warn(f"json decode error: {exc}", SudoersWarning)
         return []
     except FileNotFoundError:
         warnings.warn("Sudoers file not found", SudoersWarning)
         return []
+
+
+def get_hides():
+    data = cfg.HIDE_PATH.read_text()
+    try:
+        data = list(set(json.loads(data)))
+        data.sort()
+        return data
+    except json.decoder.JSONDecodeError as exc:
+        warnings.warn(f"json decode error: {exc}", HidesWarning)
+        return []
+
+
+def add_to_hides(folder):
+    current_hides = get_hides()
+    if folder in current_hides:
+        return False
+
+    current_hides.append(folder)
+    current_hides = list(set(current_hides))
+    current_hides.sort()
+    data = json.dumps(current_hides, indent=4)
+    cfg.HIDE_PATH.write_text(data)
+    return True
+
+
+def remove_from_hides(folder):
+    current_hides = get_hides()
+    if folder not in current_hides:
+        return False
+
+    current_hides.remove(folder)
+    current_hides = list(set(current_hides))
+    current_hides.sort()
+    data = json.dumps(current_hides, indent=4)
+    cfg.HIDE_PATH.write_text(data)
+    return True
 
 
 def log(string, *args):
@@ -32,7 +76,11 @@ def log(string, *args):
 
 
 def get_user():
-    auth = request.authorization
+    try:
+        auth = request.authorization
+    except RuntimeError:
+        return None
+
     if not auth:
         return None
     else:
@@ -40,10 +88,20 @@ def get_user():
 
 
 def get_folders():
+    hides = get_hides()
     folder_choices = [
         Path(x[0]).relative_to(cfg.CLOUD_PATH)
         for x in os.walk(cfg.CLOUD_PATH, followlinks=True)
     ]
+
+    folders = []
+    for folder in folder_choices:
+        for hide in hides:
+            if re.search(hide, folder.as_posix(), re.IGNORECASE):
+                break
+        else:
+            folders.append(folder)
+    folder_choices = folders
 
     if get_user() not in get_sudoers():
         folder_choices = [x for x in folder_choices if filter_non_admin_folders(x)]
@@ -54,3 +112,8 @@ def get_folders():
 
 def filter_non_admin_folders(x):
     return not (x.as_posix().startswith(".") and len(x.as_posix()) > 1)
+
+
+def gen_random_password(n=16):
+    possible = ascii_letters + digits
+    return "".join([choice(possible) for x in range(n)])
