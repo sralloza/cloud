@@ -76,6 +76,27 @@ def hide(filepath):
 
     return "done", 200
 
+
+@app.route("/unhide/<path:filepath>", methods=["GET"])
+def unhide(filepath):
+    current_hides = get_hides()
+    current_hides.remove(filepath)
+    current_hides = list(set(current_hides))
+    current_hides.sort()
+    data = json.dumps(current_hides, indent=4)
+    cfg.HIDE_PATH.write_text(data)
+
+    return "done", 200
+
+
+@app.route("/unhide-all", methods=["GET"])
+def unhide_all():
+    data = json.dumps(list(), indent=4)
+    cfg.HIDE_PATH.write_text(data)
+
+    return "done", 200
+
+
 @app.route("/d/<path:filepath>", methods=["GET"])
 @app.route("/delete/<path:filepath>", methods=["GET"])
 def delete(filepath):
