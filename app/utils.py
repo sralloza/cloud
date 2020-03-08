@@ -46,7 +46,11 @@ def log(string, *args):
 
 
 def get_user():
-    auth = request.authorization
+    try:
+        auth = request.authorization
+    except RuntimeError:
+        return None
+
     if not auth:
         return None
     else:
