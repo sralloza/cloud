@@ -4,7 +4,14 @@ from unittest import mock
 
 import pytest
 
-from app.utils import SudoersWarning, get_sudoers, log, get_user, get_folders
+from app.utils import (
+    SudoersWarning,
+    gen_random_password,
+    get_folders,
+    get_sudoers,
+    get_user,
+    log,
+)
 
 
 def test_warning():
@@ -67,43 +74,80 @@ class TestGetUser:
         assert get_user() is None
 
 
-@pytest.fixture
-def folders_mocker():
-    cfg_mock = mock.patch("app.utils.cfg", spec=True).start()
-    os_walk_mock = mock.patch("os.walk", spec=True).start()
-    get_user_mock = mock.patch("app.utils.get_user", spec=True).start()
-    get_sudoers_mock = mock.patch("app.utils.get_sudoers", spec=True).start()
+class TestGetFolders:
+    def setup_class(self):
+        self.input_data = (
+            ("/test/folder-1",),
+            ("/test/folder-1/subfolder-1.2/subsubfolder-1.2.1",),
+            ("/test/folder-1/subfolder-1.1",),
+            ("/test/folder-1/subfolder-1.2",),
+            ("/test/folder-2",),
+            ("/test/folder-2/subfolder-2.1",),
+            ("/test/.data/something",),
+        )
+        self.output_data = (
+            ".data/something",
+            "folder-1",
+            "folder-1/subfolder-1.1",
+            "folder-1/subfolder-1.2",
+            "folder-1/subfolder-1.2/subsubfolder-1.2.1",
+            "folder-2",
+            "folder-2/subfolder-2.1",
+        )
 
-    yield cfg_mock, os_walk_mock, get_user_mock, get_sudoers_mock
+    @pytest.fixture
+    def folders_mocker(self):
+        cfg_mock = mock.patch("app.utils.cfg", spec=True).start()
+        os_walk_mock = mock.patch("os.walk", spec=True).start()
+        get_user_mock = mock.patch("app.utils.get_user", spec=True).start()
+        sudoers_mock = mock.patch("app.utils.get_sudoers", spec=True).start()
+        hides_mock = mock.patch("app.utils.get_hides", spec=True).start()
 
-    mock.patch.stopall()
+        yield cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, hides_mock
 
+        mock.patch.stopall()
 
-def test_get_folders(folders_mocker):
-    cfg_mock, os_walk_mock, get_user_mock, get_sudoers_mock = folders_mocker
+    def test_no_sudores_or_hides(self, folders_mocker):
+        cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, hides_mock = folders_mocker
 
-    cfg_mock.CLOUD_PATH = "/test"
-    os_walk_mock.return_value = [
-        ("/test/folder-1",),
-        ("/test/folder-1/subfolder-1.2/subsubfolder-1.2.1",),
-        ("/test/folder-1/subfolder-1.1",),
-        ("/test/folder-1/subfolder-1.2",),
-        ("/test/folder-2",),
-        ("/test/folder-2/subfolder-2.1",),
-    ]
-    get_user_mock.return_value = None
-    get_sudoers_mock.return_value = []
+        cfg_mock.CLOUD_PATH = "/test"
+        os_walk_mock.return_value = self.input_data
+        get_user_mock.return_value = None
+        sudoers_mock.return_value = []
+        hides_mock.return_value = []
 
-    expected = [
-        "folder-1",
-        "folder-1/subfolder-1.1",
-        "folder-1/subfolder-1.2",
-        "folder-1/subfolder-1.2/subsubfolder-1.2.1",
-        "folder-2",
-        "folder-2/subfolder-2.1",
-    ]
+        expected = self.output_data[1:]
+        real = tuple([x.as_posix() for x in get_folders()])
 
-    assert [x.as_posix() for x in get_folders()] == expected
+        assert real == expected
+
+    def test_sudoers(self, folders_mocker):
+        cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, hides_mock = folders_mocker
+
+        cfg_mock.CLOUD_PATH = "/test"
+        os_walk_mock.return_value = self.input_data
+        get_user_mock.return_value = "user"
+        sudoers_mock.return_value = ["user"]
+        hides_mock.return_value = []
+
+        expected = self.output_data
+        real = tuple([x.as_posix() for x in get_folders()])
+
+        assert real == expected
+
+    def test_hides(self, folders_mocker):
+        cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, hides_mock = folders_mocker
+
+        cfg_mock.CLOUD_PATH = "/test"
+        os_walk_mock.return_value = self.input_data
+        get_user_mock.return_value = "user"
+        sudoers_mock.return_value = []
+        hides_mock.return_value = ["folder-2"]
+
+        expected = self.output_data[1:-2]
+        real = tuple([x.as_posix() for x in get_folders()])
+
+        assert real == expected
 
 
 def test_gen_random_password():
