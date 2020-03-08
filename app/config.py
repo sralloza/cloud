@@ -2,12 +2,13 @@ import platform
 from pathlib import Path
 import json
 
+
 class _Config:
-    LOG_PATH = Path("")
-    CLOUD_PATH = Path("")
-    SUDOERS_PATH = Path("")
+    LOG_PATH = Path(__file__).parent.with_name("web.log")
+    CLOUD_PATH = Path(__file__).parent.with_name("files")
+    SUDOERS_PATH = Path(__file__).parent.with_name("sudoers.json")
+    HIDE_PATH = Path(__file__).parent.with_name("hide.json")
     PLATFORM = ""
-    HIDE_PATH = Path("")
 
     @staticmethod
     def setup_config():
@@ -20,18 +21,10 @@ class _Config:
 
 
 class _Windows(_Config):
-    LOG_PATH = Path("D:\\.scripts\\cloud\\web.log")
-    CLOUD_PATH = Path("D:\\.scripts\\cloud\\files")
-    SUDOERS_PATH = Path("D:\\.scripts\\cloud\\sudoers.json")
-    HIDE_PATH = Path("D:\\.scripts\\cloud\\hide.json")
     PLATFORM = "Windows"
 
 
 class _Linux(_Config):
-    LOG_PATH = Path("/srv/cloud/web.log")
-    CLOUD_PATH = Path("/srv/cloud/files")
-    SUDOERS_PATH = Path("/srv/cloud/sudoers.json")
-    HIDE_PATH = Path("/srv/cloud/hide.json")
     PLATFORM = "Linux"
 
 
