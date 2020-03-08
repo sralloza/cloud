@@ -151,4 +151,12 @@ class TestGetFolders:
 
 
 def test_gen_random_password():
-    assert 0, "Not implemented"
+    p1 = gen_random_password()
+    p2 = gen_random_password()
+    p3 = gen_random_password()
+
+    assert p1 != p2 != p3
+    assert len(p1) == len(p2) == len(p3) == 16
+
+    p4 = gen_random_password(n=24)
+    assert len(p4) == 24
