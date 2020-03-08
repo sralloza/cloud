@@ -8,6 +8,7 @@ import pytest
 from app.utils import (
     HidesWarning,
     SudoersWarning,
+    add_to_hides,
     gen_random_password,
     get_folders,
     get_hides,
@@ -53,6 +54,33 @@ class TestGetHides:
         with pytest.warns(HidesWarning):
             hides = get_hides()
         assert hides == []
+
+
+@mock.patch("app.utils.cfg.HIDE_PATH")
+@mock.patch("app.utils.get_hides")
+class TestAddToHides:
+    def test_true(self, hides_mock, hide_path_mock):
+        hides_mock.return_value = ["aaa", "bbb"]
+        result = add_to_hides("ccc")
+
+        expected_call = json.dumps(["aaa", "bbb", "ccc"], indent=4)
+        assert result is True
+        hide_path_mock.write_text.assert_called_once_with(expected_call)
+
+    def test_false(self, hides_mock, hide_path_mock):
+        hides_mock.return_value = ["aaa", "bbb", "ccc"]
+        result = add_to_hides("ccc")
+
+        assert result is False
+        hide_path_mock.write_text.assert_not_called()
+
+
+class TestRemoveFromHides:
+    def test_true(self):
+        assert 0, "Not implemented."
+
+    def test_false(self):
+        assert 0, "Not implemented."
 
 
 @mock.patch("app.utils.cfg", spec=True)
