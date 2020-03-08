@@ -15,6 +15,7 @@ from app.utils import (
     get_sudoers,
     get_user,
     log,
+    remove_from_hides,
 )
 
 
@@ -75,12 +76,23 @@ class TestAddToHides:
         hide_path_mock.write_text.assert_not_called()
 
 
+@mock.patch("app.utils.cfg.HIDE_PATH")
+@mock.patch("app.utils.get_hides")
 class TestRemoveFromHides:
-    def test_true(self):
-        assert 0, "Not implemented."
+    def test_true(self, hides_mock, hide_path_mock):
+        hides_mock.return_value = ["aaa", "bbb", "ccc"]
+        result = remove_from_hides("ccc")
 
-    def test_false(self):
-        assert 0, "Not implemented."
+        expected_call = json.dumps(["aaa", "bbb"], indent=4)
+        assert result is True
+        hide_path_mock.write_text.assert_called_once_with(expected_call)
+
+    def test_false(self, hides_mock, hide_path_mock):
+        hides_mock.return_value = ["aaa", "bbb"]
+        result = remove_from_hides("ccd")
+
+        assert result is False
+        hide_path_mock.write_text.assert_not_called()
 
 
 @mock.patch("app.utils.cfg", spec=True)
