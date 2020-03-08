@@ -4,6 +4,10 @@ files/
 .idea/
 .vscode/
 
+# Coverage
+htmlcov/
+.coverage
+
 *.log
 sudoers.json
 hide.json
