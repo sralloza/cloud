@@ -43,6 +43,32 @@ def get_hides():
         return []
 
 
+def add_to_hides(folder):
+    current_hides = get_hides()
+    if folder in current_hides:
+        return False
+
+    current_hides.append(folder)
+    current_hides = list(set(current_hides))
+    current_hides.sort()
+    data = json.dumps(current_hides, indent=4)
+    cfg.HIDE_PATH.write_text(data)
+    return True
+
+
+def remove_from_hides(folder):
+    current_hides = get_hides()
+    if folder not in current_hides:
+        return False
+
+    current_hides.remove(folder)
+    current_hides = list(set(current_hides))
+    current_hides.sort()
+    data = json.dumps(current_hides, indent=4)
+    cfg.HIDE_PATH.write_text(data)
+    return True
+
+
 def log(string, *args):
     timestamp = "[%s] - %s - " % (asctime(), request.remote_addr)
     with cfg.LOG_PATH.open("at") as f:

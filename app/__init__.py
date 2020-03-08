@@ -6,7 +6,7 @@ from flask import Flask, redirect, render_template, request
 from flask_bootstrap import Bootstrap
 from werkzeug.utils import secure_filename
 
-from app.utils import get_hides
+from app.utils import add_to_hides, get_hides, remove_from_hides
 
 from .config import cfg
 from .forms import UploadForm
@@ -67,25 +67,13 @@ def upload():
 
 @app.route("/hide/<path:filepath>", methods=["GET"])
 def hide(filepath):
-    current_hides = get_hides()
-    current_hides.append(filepath)
-    current_hides = list(set(current_hides))
-    current_hides.sort()
-    data = json.dumps(current_hides, indent=4)
-    cfg.HIDE_PATH.write_text(data)
-
+    add_to_hides(filepath)
     return "done", 200
 
 
 @app.route("/unhide/<path:filepath>", methods=["GET"])
 def unhide(filepath):
-    current_hides = get_hides()
-    current_hides.remove(filepath)
-    current_hides = list(set(current_hides))
-    current_hides.sort()
-    data = json.dumps(current_hides, indent=4)
-    cfg.HIDE_PATH.write_text(data)
-
+    remove_from_hides(filepath)
     return "done", 200
 
 
