@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import warnings
 from pathlib import Path
 from time import asctime
@@ -13,15 +14,28 @@ class SudoersWarning(Warning):
     pass
 
 
+class HidesWarning(Warning):
+    pass
+
+
 def get_sudoers():
     try:
         with cfg.SUDOERS_PATH.open() as f:
             return json.load(f)
-    except json.JSONDecodeError as err:
-        warnings.warn(f"json decode error: {err}", SudoersWarning)
+    except json.JSONDecodeError as exc:
+        warnings.warn(f"json decode error: {exc}", SudoersWarning)
         return []
     except FileNotFoundError:
         warnings.warn("Sudoers file not found", SudoersWarning)
+        return []
+
+
+def get_hides():
+    data = cfg.HIDE_PATH.read_text()
+    try:
+        return json.loads(data)
+    except json.decoder.JSONDecodeError as exc:
+        warnings.warn(f"json decode error: {exc}", HidesWarning)
         return []
 
 
