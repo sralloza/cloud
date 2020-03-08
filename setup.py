@@ -1,3 +1,3 @@
 from setuptools import setup
 
-setup(name="sralloza-cloud", version="1.0")
+setup(name="app", version="1.0")
