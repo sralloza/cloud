@@ -54,10 +54,20 @@ def get_user():
 
 
 def get_folders():
+    hides = get_hides()
     folder_choices = [
         Path(x[0]).relative_to(cfg.CLOUD_PATH)
         for x in os.walk(cfg.CLOUD_PATH, followlinks=True)
     ]
+
+    folders = []
+    for folder in folder_choices:
+        for hide in hides:
+            if re.search(hide, folder.as_posix(), re.IGNORECASE):
+                break
+        else:
+            folders.append(folder)
+    folder_choices = folders
 
     if get_user() not in get_sudoers():
         folder_choices = [x for x in folder_choices if filter_non_admin_folders(x)]
