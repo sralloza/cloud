@@ -80,7 +80,8 @@ def unhide(filepath):
 
 @app.route("/unhide-all", methods=["GET"])
 def unhide_all():
-    remove_from_hides(get_hides())
+    for folder in get_hides():
+        remove_from_hides(folder)
     return "done", 200
 
 
