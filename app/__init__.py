@@ -60,7 +60,7 @@ def upload():
     log(
         "User %r upload files to folder %r: %s",
         get_user(),
-        folder,
+        folder.as_posix(),
         [secure_filename(x.filename) for x in request.files.getlist("files")],
     )
     return redirect("/")
