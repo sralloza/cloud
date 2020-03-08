@@ -3,6 +3,8 @@ import os
 import re
 import warnings
 from pathlib import Path
+from random import choice
+from string import ascii_letters, digits
 from time import asctime
 
 from flask import request
@@ -82,3 +84,8 @@ def get_folders():
 
 def filter_non_admin_folders(x):
     return not (x.as_posix().startswith(".") and len(x.as_posix()) > 1)
+
+
+def gen_random_password(n=16):
+    possible = ascii_letters + digits
+    return "".join([choice(possible) for x in range(n)])
