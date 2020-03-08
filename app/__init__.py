@@ -6,13 +6,14 @@ from flask import Flask, redirect, render_template, request
 from flask_bootstrap import Bootstrap
 from werkzeug.utils import secure_filename
 
-from app.utils import add_to_hides, get_hides, remove_from_hides
+from app.utils import add_to_hides, gen_random_password, get_hides, remove_from_hides
 
 from .config import cfg
 from .forms import UploadForm
 from .utils import get_folders, get_sudoers, get_user, log
 
 app = Flask(__name__)
+app.secret_key = gen_random_password()
 Bootstrap(app)
 
 META = '<meta http-equiv="refresh" content="3;url=/files">'
@@ -79,9 +80,7 @@ def unhide(filepath):
 
 @app.route("/unhide-all", methods=["GET"])
 def unhide_all():
-    data = json.dumps(list(), indent=4)
-    cfg.HIDE_PATH.write_text(data)
-
+    remove_from_hides(get_hides())
     return "done", 200
 
 
