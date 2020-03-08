@@ -35,7 +35,9 @@ def get_sudoers():
 def get_hides():
     data = cfg.HIDE_PATH.read_text()
     try:
-        return json.loads(data)
+        data = list(set(json.loads(data)))
+        data.sort()
+        return data
     except json.decoder.JSONDecodeError as exc:
         warnings.warn(f"json decode error: {exc}", HidesWarning)
         return []

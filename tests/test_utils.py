@@ -1,3 +1,4 @@
+import json
 import warnings
 from datetime import datetime
 from unittest import mock
@@ -5,9 +6,11 @@ from unittest import mock
 import pytest
 
 from app.utils import (
+    HidesWarning,
     SudoersWarning,
     gen_random_password,
     get_folders,
+    get_hides,
     get_sudoers,
     get_user,
     log,
@@ -32,6 +35,24 @@ def test_get_sudoers(mocker):
     with pytest.warns(SudoersWarning, match="Sudoers file not found"):
         fp.read.side_effect = FileNotFoundError
         assert get_sudoers() == []
+
+
+@mock.patch("app.utils.cfg.HIDE_PATH")
+class TestGetHides:
+    def test_normal(self, hide_path_mock):
+        data = ["bbb", "aaa"]
+        hide_path_mock.read_text.return_value = json.dumps(data * 5)
+
+        hides = get_hides()
+        data.sort()
+        assert hides == data
+
+    def test_error(self, hide_path_mock):
+        hide_path_mock.read_text.return_value = ""
+
+        with pytest.warns(HidesWarning):
+            hides = get_hides()
+        assert hides == []
 
 
 @mock.patch("app.utils.cfg", spec=True)
