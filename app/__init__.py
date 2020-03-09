@@ -72,6 +72,11 @@ def hide(filepath):
     return "done", 200
 
 
+@app.route("/show-hides", methods=["GET"])
+def show_hides():
+    return "<br>".join(get_hides()), 200
+
+
 @app.route("/unhide/<path:filepath>", methods=["GET"])
 def unhide(filepath):
     remove_from_hides(filepath)
