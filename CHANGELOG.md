@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 * Run tests on push.
-* Add endpoints to hide folders: `/hide<path>`, `/unhide<path>` and `/unhide-all`.
+* Add endpoints to hide folders: `/hide<path>`, `/show-hides`, `/unhide<path>` and `/unhide-all`.
 
 ## [1.0.0] - 2019-07-18
 ### Added
