@@ -18,6 +18,8 @@ Folder = namedtuple("Folder", ["id", "name"])
 def upload_files():
     folder = get_post_arg("folder")
 
+    log("User %r made a POST request to /upload", get_user())
+
     if folder is None:
         flash("No folder supplied or an invalid folder was supplied", "danger")
         return redirect("/")
@@ -36,8 +38,10 @@ def upload_files():
         flash("No files supplied", "danger")
         return redirect("/")
 
+    log_files = []
     for file in files:
         filename = secure_filename(file.filename)
+        log_files.append(filename)
         filename = cfg.CLOUD_PATH / folder / filename
         file.save(filename.as_posix())
 
@@ -45,7 +49,7 @@ def upload_files():
         "User %r upload files to folder %r: %s",
         get_user(),
         folder.as_posix(),
-        [secure_filename(x.filename) for x in request.files.getlist("files")],
+        log_files,
     )
     flash("Files uploaded successfully", "success")
     return redirect("/")
