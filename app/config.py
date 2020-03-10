@@ -5,7 +5,7 @@ import json
 
 class _Config:
     LOG_PATH = Path(__file__).parent.with_name("web.log")
-    CLOUD_PATH = Path(__file__).parent.with_name("files")
+    CLOUD_PATH = Path(__file__).parent.with_name("cloud")
     SUDOERS_PATH = Path(__file__).parent.with_name("sudoers.json")
     HIDE_PATH = Path(__file__).parent.with_name("hide.json")
     PLATFORM = ""
