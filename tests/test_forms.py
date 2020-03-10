@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm as Form
 from wtforms.fields.core import UnboundField
 
-from app import UploadForm
+from app.forms import UploadForm
 
 
 def test_attributes():
