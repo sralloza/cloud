@@ -9,15 +9,9 @@ from time import asctime
 
 from flask import request
 
-from .config import cfg
+from app.config import cfg
 
-
-class SudoersWarning(Warning):
-    pass
-
-
-class HidesWarning(Warning):
-    pass
+from .exeptions import IngoredWarning, SudoersWarning
 
 
 def get_sudoers():
@@ -32,40 +26,40 @@ def get_sudoers():
         return []
 
 
-def get_hides():
-    data = cfg.HIDE_PATH.read_text()
+def get_ignored():
+    data = cfg.IGNORED_PATH.read_text()
     try:
         data = list(set(json.loads(data)))
         data.sort()
         return data
     except json.decoder.JSONDecodeError as exc:
-        warnings.warn(f"json decode error: {exc}", HidesWarning)
+        warnings.warn(f"json decode error: {exc}", IngoredWarning)
         return []
 
 
-def add_to_hides(folder):
-    current_hides = get_hides()
-    if folder in current_hides:
+def add_to_ingored(folder):
+    current_ignored = get_ignored()
+    if folder in current_ignored:
         return False
 
-    current_hides.append(folder)
-    current_hides = list(set(current_hides))
-    current_hides.sort()
-    data = json.dumps(current_hides, indent=4)
-    cfg.HIDE_PATH.write_text(data)
+    current_ignored.append(folder)
+    current_ignored = list(set(current_ignored))
+    current_ignored.sort()
+    data = json.dumps(current_ignored, indent=4)
+    cfg.IGNORED_PATH.write_text(data)
     return True
 
 
-def remove_from_hides(folder):
-    current_hides = get_hides()
-    if folder not in current_hides:
+def remove_from_ignored(folder):
+    current_ignored = get_ignored()
+    if folder not in current_ignored:
         return False
 
-    current_hides.remove(folder)
-    current_hides = list(set(current_hides))
-    current_hides.sort()
-    data = json.dumps(current_hides, indent=4)
-    cfg.HIDE_PATH.write_text(data)
+    current_ignored.remove(folder)
+    current_ignored = list(set(current_ignored))
+    current_ignored.sort()
+    data = json.dumps(current_ignored, indent=4)
+    cfg.IGNORED_PATH.write_text(data)
     return True
 
 
@@ -88,7 +82,7 @@ def get_user():
 
 
 def get_folders():
-    hides = get_hides()
+    hides = get_ignored()
     folder_choices = [
         Path(x[0]).relative_to(cfg.CLOUD_PATH)
         for x in os.walk(cfg.CLOUD_PATH, followlinks=True)
