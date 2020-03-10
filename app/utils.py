@@ -117,3 +117,28 @@ def filter_non_admin_folders(x):
 def gen_random_password(n=16):
     possible = ascii_letters + digits
     return "".join([choice(possible) for x in range(n)])
+
+
+def get_post_arg(form_name, required=False, strip=False):
+    """Gets an arg from a post form and parses it.
+    Args:
+        form_name (str): key to extract.
+        required (bool, optional): Marks the key as required. If it's not
+            present, a RunTimeError will be raised. Defaults to False.
+        strip (bool, optional): Strip the value before returning. Defaults to False.
+    Raises:
+        RuntimeError: If `required` is True and the key is not in the form data.
+    Returns:
+        str: value generated.
+    """
+    arg = request.form.get(form_name, None)
+
+    if strip and isinstance(arg, str):
+        arg = arg.strip()
+        if not arg:
+            arg = None
+
+    if required and not arg:
+        raise RuntimeError("%r is required (%r)" % (form_name, arg))
+
+    return arg

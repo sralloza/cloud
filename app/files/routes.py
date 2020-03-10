@@ -1,42 +1,45 @@
 import os
 import shutil
-from logging import log
+from collections import namedtuple
 
 from flask.globals import request
+from flask.helpers import flash
 from werkzeug.utils import redirect, secure_filename
 
 from app.config import cfg
-from app.forms import UploadForm
-from app.utils import get_folders, get_user
+from app.utils import get_folders, get_post_arg, get_user, log
 
 from . import files_bp
 
+Folder = namedtuple("Folder", ["id", "name"])
+
 
 @files_bp.route("/upload", methods=["POST"])
-def upload():
-    form = UploadForm()
+def upload_files():
+    folder = get_post_arg("folder")
 
-    if form.folder.data is None:
-        return (
-            "<h1>No folder supplied or an invalid folder was supplied<h1>",
-            400,
-        )
+    if folder is None:
+        flash("No folder supplied or an invalid folder was supplied", "danger")
+        return redirect("/")
 
-    folder_choices = get_folders()
+    folders = get_folders()
 
     try:
-        folder = folder_choices[int(form.folder.data)]
+        folder = folders[int(folder)]
     except IndexError:
-        return "<h1>Invalid index folder<h2>", 400
-    files = request.files.getlist("files")
+        flash("Invalid index folder (index %d)" % folder, "danger")
+        return redirect("/")
+
+    files = request.files.getlist("files[]")
 
     if not files:
-        return "<h1>No files supplied</h1>", 400
+        flash("No files supplied", "danger")
+        return redirect("/")
 
-    for f in files:
-        filename = secure_filename(f.filename)
+    for file in files:
+        filename = secure_filename(file.filename)
         filename = cfg.CLOUD_PATH / folder / filename
-        f.save(filename.as_posix())
+        file.save(filename.as_posix())
 
     log(
         "User %r upload files to folder %r: %s",
@@ -44,6 +47,7 @@ def upload():
         folder.as_posix(),
         [secure_filename(x.filename) for x in request.files.getlist("files")],
     )
+    flash("Files uploaded successfully", "success")
     return redirect("/")
 
 
