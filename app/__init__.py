@@ -1,9 +1,9 @@
 from flask.app import Flask
 from flask_bootstrap import Bootstrap
 
-from app.base import base_blueprint
-from app.files import files_blueprint
-from app.helpers import helpers_blueprint
+from app.base import base_bp
+from app.files import files_bp
+from app.helpers import helpers_bp
 from app.utils import gen_random_password
 
 
@@ -12,9 +12,9 @@ def create_app():
     application.secret_key = gen_random_password()
     Bootstrap(application)
 
-    application.register_blueprint(base_blueprint)
-    application.register_blueprint(files_blueprint)
-    application.register_blueprint(helpers_blueprint)
+    application.register_blueprint(base_bp)
+    application.register_blueprint(files_bp)
+    application.register_blueprint(helpers_bp)
 
     return application
 

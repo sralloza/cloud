@@ -9,13 +9,13 @@ from app.config import cfg
 from app.forms import UploadForm
 from app.utils import get_folders, get_user, log
 
-from . import base_blueprint
+from . import base_bp
 
 template_name = "index.html"
 Folder = namedtuple("Folder", ["id", "name"])
 
 
-@base_blueprint.route("/", methods=["GET"])
+@base_bp.route("/", methods=["GET"])
 def index():
     form = UploadForm()
     folder_choices = get_folders()
