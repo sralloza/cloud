@@ -1,27 +1,27 @@
-from app.utils import add_to_hides, get_hides, remove_from_hides
+from app.utils import add_to_ignored, get_ignored, remove_from_ignored
 
 from . import helpers_bp
 
 
-@helpers_bp.route("/hide/<path:filepath>", methods=["GET"])
-def hide(filepath):
-    add_to_hides(filepath)
+@helpers_bp.route("/ignore/<path:filepath>", methods=["GET"])
+def ignore(filepath):
+    add_to_ignored(filepath)
     return "done", 200
 
 
-@helpers_bp.route("/show-hides", methods=["GET"])
-def show_hides():
-    return "<br>".join(get_hides()), 200
+@helpers_bp.route("/show-ignored", methods=["GET"])
+def show_ignored():
+    return "<br>".join(get_ignored()), 200
 
 
-@helpers_bp.route("/unhide/<path:filepath>", methods=["GET"])
-def unhide(filepath):
-    remove_from_hides(filepath)
+@helpers_bp.route("/unignore/<path:filepath>", methods=["GET"])
+def unignore(filepath):
+    remove_from_ignored(filepath)
     return "done", 200
 
 
-@helpers_bp.route("/unhide-all", methods=["GET"])
-def unhide_all():
-    for folder in get_hides():
-        remove_from_hides(folder)
+@helpers_bp.route("/un_ignore-all", methods=["GET"])
+def unignore_all():
+    for folder in get_ignored():
+        remove_from_ignored(folder)
     return "done", 200

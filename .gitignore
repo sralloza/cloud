@@ -11,4 +11,4 @@ htmlcov/
 
 *.log
 sudoers.json
-hide.json
+ignored.json

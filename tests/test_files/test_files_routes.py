@@ -23,15 +23,17 @@ class TestUpload:
     def upload_mocks(self):
         folders = [Path(x) for x in ["folder-1", "folder-2", "folder-3"]]
 
-        cfg_mock = mock.patch("app.cfg").start()
+        cfg_mock = mock.patch("app.files.routes.cfg").start()
         file_storage_mock = mock.patch(
             "werkzeug.datastructures.FileStorage.save"
         ).start()
-        get_folders_mock = mock.patch("app.get_folders", return_value=folders).start()
-        log_mock = mock.patch("app.log").start()
-        get_user_mock = mock.patch("app.get_user", return_value="user-foo").start()
+        get_folders_mock = mock.patch("app.files.routes.get_folders").start()
+        log_mock = mock.patch("app.files.routes.log").start()
+        get_user_mock = mock.patch("app.files.routes.get_user").start()
 
         cfg_mock.CLOUD_PATH = Path("/cloud")
+        get_folders_mock.return_value = folders
+        get_user_mock.return_value = "user-foo"
 
         yield cfg_mock, file_storage_mock, get_folders_mock, log_mock, get_user_mock
 
@@ -330,7 +332,9 @@ class TestMove:
     @pytest.fixture
     def move_mocks(self):
         log_mock = mock.patch("app.files.routes.log").start()
-        get_user_mock = mock.patch("app.files.routes.get_user", return_value="user-bar").start()
+        get_user_mock = mock.patch(
+            "app.files.routes.get_user", return_value="user-bar"
+        ).start()
         move_mock = mock.patch("shutil.move").start()
 
         yield log_mock, get_user_mock, move_mock

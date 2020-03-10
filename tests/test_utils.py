@@ -5,10 +5,18 @@ from unittest import mock
 
 import pytest
 
-from app.utils import (HidesWarning, SudoersWarning, add_to_hides,
-                       gen_random_password, get_folders, get_hides,
-                       get_post_arg, get_sudoers, get_user, log,
-                       remove_from_hides)
+from app.utils import (
+    add_to_ignored,
+    gen_random_password,
+    get_folders,
+    get_ignored,
+    get_post_arg,
+    get_sudoers,
+    get_user,
+    log,
+    remove_from_ignored,
+)
+from app.utils.exceptions import SudoersWarning, IngoredWarning
 
 
 def test_warning():
@@ -31,60 +39,60 @@ def test_get_sudoers(mocker):
         assert get_sudoers() == []
 
 
-@mock.patch("app.utils.cfg.HIDE_PATH")
-class TestGetHides:
-    def test_normal(self, hide_path_mock):
+@mock.patch("app.utils.cfg.IGNORED_PATH")
+class TestGetignored:
+    def test_normal(self, ignored_path_mock):
         data = ["bbb", "aaa"]
-        hide_path_mock.read_text.return_value = json.dumps(data * 5)
+        ignored_path_mock.read_text.return_value = json.dumps(data * 5)
 
-        hides = get_hides()
+        ignored = get_ignored()
         data.sort()
-        assert hides == data
+        assert ignored == data
 
-    def test_error(self, hide_path_mock):
-        hide_path_mock.read_text.return_value = ""
+    def test_error(self, ignored_path_mock):
+        ignored_path_mock.read_text.return_value = ""
 
-        with pytest.warns(HidesWarning):
-            hides = get_hides()
-        assert hides == []
+        with pytest.warns(IngoredWarning):
+            ignored = get_ignored()
+        assert ignored == []
 
 
-@mock.patch("app.utils.cfg.HIDE_PATH")
-@mock.patch("app.utils.get_hides")
-class TestAddToHides:
-    def test_true(self, hides_mock, hide_path_mock):
-        hides_mock.return_value = ["aaa", "bbb"]
-        result = add_to_hides("ccc")
+@mock.patch("app.utils.cfg.IGNORED_PATH")
+@mock.patch("app.utils.get_ignored")
+class TestAddToignored:
+    def test_true(self, ignored_mock, ignored_path_mock):
+        ignored_mock.return_value = ["aaa", "bbb"]
+        result = add_to_ignored("ccc")
 
         expected_call = json.dumps(["aaa", "bbb", "ccc"], indent=4)
         assert result is True
-        hide_path_mock.write_text.assert_called_once_with(expected_call)
+        ignored_path_mock.write_text.assert_called_once_with(expected_call)
 
-    def test_false(self, hides_mock, hide_path_mock):
-        hides_mock.return_value = ["aaa", "bbb", "ccc"]
-        result = add_to_hides("ccc")
+    def test_false(self, ignored_mock, ignored_path_mock):
+        ignored_mock.return_value = ["aaa", "bbb", "ccc"]
+        result = add_to_ignored("ccc")
 
         assert result is False
-        hide_path_mock.write_text.assert_not_called()
+        ignored_path_mock.write_text.assert_not_called()
 
 
-@mock.patch("app.utils.cfg.HIDE_PATH")
-@mock.patch("app.utils.get_hides")
-class TestRemoveFromHides:
-    def test_true(self, hides_mock, hide_path_mock):
-        hides_mock.return_value = ["aaa", "bbb", "ccc"]
-        result = remove_from_hides("ccc")
+@mock.patch("app.utils.cfg.IGNORED_PATH")
+@mock.patch("app.utils.get_ignored")
+class TestRemoveFromignored:
+    def test_true(self, ignored_mock, ignored_path_mock):
+        ignored_mock.return_value = ["aaa", "bbb", "ccc"]
+        result = remove_from_ignored("ccc")
 
         expected_call = json.dumps(["aaa", "bbb"], indent=4)
         assert result is True
-        hide_path_mock.write_text.assert_called_once_with(expected_call)
+        ignored_path_mock.write_text.assert_called_once_with(expected_call)
 
-    def test_false(self, hides_mock, hide_path_mock):
-        hides_mock.return_value = ["aaa", "bbb"]
-        result = remove_from_hides("ccd")
+    def test_false(self, ignored_mock, ignored_path_mock):
+        ignored_mock.return_value = ["aaa", "bbb"]
+        result = remove_from_ignored("ccd")
 
         assert result is False
-        hide_path_mock.write_text.assert_not_called()
+        ignored_path_mock.write_text.assert_not_called()
 
 
 @mock.patch("app.utils.cfg", spec=True)
@@ -154,20 +162,20 @@ class TestGetFolders:
         os_walk_mock = mock.patch("os.walk", spec=True).start()
         get_user_mock = mock.patch("app.utils.get_user", spec=True).start()
         sudoers_mock = mock.patch("app.utils.get_sudoers", spec=True).start()
-        hides_mock = mock.patch("app.utils.get_hides", spec=True).start()
+        ignored_mock = mock.patch("app.utils.get_ignored", spec=True).start()
 
-        yield cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, hides_mock
+        yield cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, ignored_mock
 
         mock.patch.stopall()
 
-    def test_no_sudores_or_hides(self, folders_mocker):
-        cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, hides_mock = folders_mocker
+    def test_no_sudores_or_ignored(self, folders_mocker):
+        cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, ignored_mock = folders_mocker
 
         cfg_mock.CLOUD_PATH = "/test"
         os_walk_mock.return_value = self.input_data
         get_user_mock.return_value = None
         sudoers_mock.return_value = []
-        hides_mock.return_value = []
+        ignored_mock.return_value = []
 
         expected = self.output_data[1:]
         real = tuple([x.as_posix() for x in get_folders()])
@@ -175,27 +183,27 @@ class TestGetFolders:
         assert real == expected
 
     def test_sudoers(self, folders_mocker):
-        cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, hides_mock = folders_mocker
+        cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, ignored_mock = folders_mocker
 
         cfg_mock.CLOUD_PATH = "/test"
         os_walk_mock.return_value = self.input_data
         get_user_mock.return_value = "user"
         sudoers_mock.return_value = ["user"]
-        hides_mock.return_value = []
+        ignored_mock.return_value = []
 
         expected = self.output_data
         real = tuple([x.as_posix() for x in get_folders()])
 
         assert real == expected
 
-    def test_hides(self, folders_mocker):
-        cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, hides_mock = folders_mocker
+    def test_ignored(self, folders_mocker):
+        cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, ignored_mock = folders_mocker
 
         cfg_mock.CLOUD_PATH = "/test"
         os_walk_mock.return_value = self.input_data
         get_user_mock.return_value = "user"
         sudoers_mock.return_value = []
-        hides_mock.return_value = ["folder-2"]
+        ignored_mock.return_value = ["folder-2"]
 
         expected = self.output_data[1:-2]
         real = tuple([x.as_posix() for x in get_folders()])

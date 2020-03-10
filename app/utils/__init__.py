@@ -11,7 +11,7 @@ from flask import request
 
 from app.config import cfg
 
-from .exeptions import IngoredWarning, SudoersWarning
+from .exceptions import IngoredWarning, SudoersWarning
 
 
 def get_sudoers():
@@ -37,7 +37,7 @@ def get_ignored():
         return []
 
 
-def add_to_ingored(folder):
+def add_to_ignored(folder):
     current_ignored = get_ignored()
     if folder in current_ignored:
         return False
@@ -82,7 +82,7 @@ def get_user():
 
 
 def get_folders():
-    hides = get_ignored()
+    ignored = get_ignored()
     folder_choices = [
         Path(x[0]).relative_to(cfg.CLOUD_PATH)
         for x in os.walk(cfg.CLOUD_PATH, followlinks=True)
@@ -90,8 +90,8 @@ def get_folders():
 
     folders = []
     for folder in folder_choices:
-        for hide in hides:
-            if re.search(hide, folder.as_posix(), re.IGNORECASE):
+        for pattern in ignored:
+            if re.search(pattern, folder.as_posix(), re.IGNORECASE):
                 break
         else:
             folders.append(folder)
