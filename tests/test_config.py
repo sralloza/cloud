@@ -1,7 +1,9 @@
 from pathlib import Path
 from unittest import mock
 
-from app.config import _Linux, _Windows, _Config, get_current_config
+import pytest
+
+from app.config import _Config, _Linux, _Windows, get_current_config
 
 
 def test_attributes():
@@ -54,15 +56,25 @@ def test_get_current_config():
         assert isinstance(get_current_config(), _Windows)
 
 
+@pytest.mark.parametrize("ignored_exists", [True, False])
 @mock.patch("platform.system")
-def test_setup_config(mocker):
+def test_setup_config(mocker, ignored_exists):
     mocker.return_value = "Linux"
     assert isinstance(get_current_config(), _Linux)
 
     with mock.patch("app.config.cfg") as mocker:
+        mocker.IGNORED_PATH.exists.return_value = ignored_exists
+
         get_current_config().setup_config()
+
         mocker.LOG_PATH.touch.assert_called_once()
         mocker.CLOUD_PATH.mkdir.assert_called_once_with(exist_ok=True)
         mocker.SUDOERS_PATH.touch.assert_called_once()
+
+        if not ignored_exists:
+            mocker.IGNORED_PATH.write_text.assert_called_once_with("[]")
+        else:
+            mocker.IGNORED_PATH.write_text.assert_not_called()
+
 
     # TODO: test call for IGNORED_PATH.touch() if it doesn't exist
