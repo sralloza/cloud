@@ -71,14 +71,14 @@ def delete(filepath):
         if filepath.is_dir():
             shutil.rmtree(filepath)
             log("User %r removed tree %r", get_user(), filepath.as_posix())
-            return "<h1>Tree removed</h1> {filepath.as_posix()}", 200
+            return "<h1>Tree removed</h1> %s" %filepath.as_posix(), 200
         else:
             os.remove(filepath)
             log("User %r removed file %r", get_user(), filepath.as_posix())
-            return "<h1>File deleted</h1>  {filepath.as_posix()}", 200
+            return "<h1>File deleted</h1>  %s" % filepath.as_posix(), 200
     except FileNotFoundError:
         log("User %r tried to incorrectly remove %r", get_user(), filepath.as_posix())
-        return "<h1>File not found</h1> {filepath.as_posix()}", 404
+        return "<h1>File not found</h1> %s" % filepath.as_posix(), 404
 
 
 @files_bp.route("/md/<path:folder>", methods=["GET"])
