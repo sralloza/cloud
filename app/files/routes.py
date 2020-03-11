@@ -49,7 +49,7 @@ def upload_files():
         file.save(filename.as_posix())
 
     if not log_files:
-        flash("No files supplied", "danger")
+        flash("Supplied only %d emtpy files" % len(files), "danger")
         return redirect("/")
 
     log(
@@ -71,7 +71,7 @@ def delete(filepath):
         if filepath.is_dir():
             shutil.rmtree(filepath)
             log("User %r removed tree %r", get_user(), filepath.as_posix())
-            return "<h1>Tree removed</h1> %s" %filepath.as_posix(), 200
+            return "<h1>Tree removed</h1> %s" % filepath.as_posix(), 200
         else:
             os.remove(filepath)
             log("User %r removed file %r", get_user(), filepath.as_posix())
@@ -112,7 +112,7 @@ def move():
         shutil.move(real_from, real_to)
         log("User %r moved file %r to %r", get_user(), _from, _to)
         return "<h1>File moved correctly</h1>", 200
-    except FileNotFoundError as err:
+    except (FileNotFoundError, FileExistsError) as err:
         log(
             "User %r tried to move file %r to %r, but failed (%r)",
             get_user(),
@@ -120,4 +120,4 @@ def move():
             _to,
             err,
         )
-        return " File not found", 400
+        return "File not found", 400
