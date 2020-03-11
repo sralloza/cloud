@@ -1,4 +1,5 @@
 import json
+import sys
 import warnings
 from datetime import datetime
 from unittest import mock
@@ -16,7 +17,7 @@ from app.utils import (
     log,
     remove_from_ignored,
 )
-from app.utils.exceptions import SudoersWarning, IngoredWarning
+from app.utils.exceptions import IngoredWarning, SudoersWarning
 
 
 def test_warning():
@@ -95,6 +96,7 @@ class TestRemoveFromignored:
         ignored_path_mock.write_text.assert_not_called()
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="Does not work on linux")
 @mock.patch("app.utils.cfg", spec=True)
 @mock.patch("app.utils.request", spec=True)
 @mock.patch("app.utils.asctime", spec=True)
@@ -118,6 +120,7 @@ def test_log(asctime_mock, request_mock, cfg_mock):
     assert fp.write.call_count == 2
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="Does not work on linux")
 @mock.patch("app.utils.request", spec=True)
 class TestGetUser:
     def test_no_authorization(self, request_mock):
@@ -169,7 +172,13 @@ class TestGetFolders:
         mock.patch.stopall()
 
     def test_no_sudores_or_ignored(self, folders_mocker):
-        cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, ignored_mock = folders_mocker
+        (
+            cfg_mock,
+            os_walk_mock,
+            get_user_mock,
+            sudoers_mock,
+            ignored_mock,
+        ) = folders_mocker
 
         cfg_mock.CLOUD_PATH = "/test"
         os_walk_mock.return_value = self.input_data
@@ -183,7 +192,13 @@ class TestGetFolders:
         assert real == expected
 
     def test_sudoers(self, folders_mocker):
-        cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, ignored_mock = folders_mocker
+        (
+            cfg_mock,
+            os_walk_mock,
+            get_user_mock,
+            sudoers_mock,
+            ignored_mock,
+        ) = folders_mocker
 
         cfg_mock.CLOUD_PATH = "/test"
         os_walk_mock.return_value = self.input_data
@@ -197,7 +212,13 @@ class TestGetFolders:
         assert real == expected
 
     def test_ignored(self, folders_mocker):
-        cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, ignored_mock = folders_mocker
+        (
+            cfg_mock,
+            os_walk_mock,
+            get_user_mock,
+            sudoers_mock,
+            ignored_mock,
+        ) = folders_mocker
 
         cfg_mock.CLOUD_PATH = "/test"
         os_walk_mock.return_value = self.input_data
@@ -223,6 +244,7 @@ def test_gen_random_password():
     assert len(p4) == 24
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="Does not work on linux")
 @mock.patch("app.utils.request", autospec=True)
 class TestGetPostArg:
     data_req_strip = (
