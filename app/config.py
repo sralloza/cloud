@@ -5,9 +5,9 @@ import json
 
 class _Config:
     LOG_PATH = Path(__file__).parent.with_name("web.log")
-    CLOUD_PATH = Path(__file__).parent.with_name("files")
+    CLOUD_PATH = Path(__file__).parent.with_name("cloud")
     SUDOERS_PATH = Path(__file__).parent.with_name("sudoers.json")
-    HIDE_PATH = Path(__file__).parent.with_name("hide.json")
+    IGNORED_PATH = Path(__file__).parent.with_name("ignored.json")
     PLATFORM = ""
 
     @staticmethod
@@ -16,8 +16,8 @@ class _Config:
         cfg.CLOUD_PATH.mkdir(exist_ok=True)
         cfg.SUDOERS_PATH.touch()
 
-        if not cfg.HIDE_PATH.exists():
-            cfg.HIDE_PATH.write_text(json.dumps(list()))
+        if not cfg.IGNORED_PATH.exists():
+            cfg.IGNORED_PATH.write_text(json.dumps(list()))
 
 
 class _Windows(_Config):

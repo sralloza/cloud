@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 * Run tests on push.
+* Add endpoints to ignore folders: `/ignore/<path>`, `/show-ignored`, `/unignore/<path>` and `/unignore-all`.
 
 ## [1.0.0] - 2019-07-18
 ### Added

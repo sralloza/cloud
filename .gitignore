@@ -1,6 +1,6 @@
 **/__pycache__
 venv/
-files/
+cloud/
 .idea/
 .vscode/
 
@@ -8,6 +8,7 @@ files/
 htmlcov/
 .coverage
 
+
 *.log
 sudoers.json
-hide.json
+ignored.json
