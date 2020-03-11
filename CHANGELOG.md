@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 * Run tests on push.
 * Add endpoints to ignore folders: `/ignore/<path>`, `/show-ignored`, `/unignore/<path>` and `/unignore-all`.
+* If there is an error uploading files, the message will appear as a notification.
+* Add links to `/cloud` below the files form.
 
 ## [1.0.0] - 2019-07-18
 ### Added
