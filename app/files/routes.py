@@ -81,7 +81,7 @@ def mkdir(folder: str):
     os.makedirs(cfg.CLOUD_PATH / folder)
 
     log("User %r made dir %r", get_user(), folder)
-    return redirect("/files")
+    return redirect("/cloud")
 
 
 @files_bp.route("/mv", methods=["GET"])
