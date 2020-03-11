@@ -20,7 +20,7 @@ def unignore(filepath):
     return "done", 200
 
 
-@helpers_bp.route("/un_ignore-all", methods=["GET"])
+@helpers_bp.route("/unignore-all", methods=["GET"])
 def unignore_all():
     for folder in get_ignored():
         remove_from_ignored(folder)
