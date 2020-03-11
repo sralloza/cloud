@@ -28,8 +28,8 @@ def upload_files():
 
     try:
         folder = folders[int(folder)]
-    except IndexError:
-        flash("Invalid index folder (index %d)" % folder, "danger")
+    except (IndexError, ValueError):
+        flash("Invalid index folder (index %r)" % folder, "danger")
         return redirect("/")
 
     files = request.files.getlist("files[]")
