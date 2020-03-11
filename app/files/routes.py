@@ -41,9 +41,16 @@ def upload_files():
     log_files = []
     for file in files:
         filename = secure_filename(file.filename)
+        if not filename:
+            continue
+
         log_files.append(filename)
         filename = cfg.CLOUD_PATH / folder / filename
         file.save(filename.as_posix())
+
+    if not log_files:
+        flash("No files supplied", "danger")
+        return redirect("/")
 
     log(
         "User %r upload files to folder %r: %s",
