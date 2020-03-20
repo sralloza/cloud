@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * If there is an error uploading files, the message will appear as a notification.
 * Add links to `/cloud` below the files form.
 
+### Changed
+* The box below the files form is a link to `/clod`.
+
+### Fixed
+* Fixed issues with `PermissionErrors`.
+* Fixed typo: *emtpy* -> *empty*.
+
+### Removed
+* Removed hyper link in cloud's title.
+
 ## [1.0.0] - 2019-07-18
 ### Added
 * Add sudoers file to store admins.
