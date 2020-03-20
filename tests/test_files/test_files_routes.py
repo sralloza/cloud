@@ -83,6 +83,36 @@ class TestUpload:
         save_mock.assert_called_with("/cloud/folder-3/test.rar")
         assert save_mock.call_count == 2
 
+    def test_permission_error(self, client, upload_mocks):
+        save_mock, folders_mock, log_mock, gu_mock = upload_mocks
+
+
+        exc = PermissionError("You can't save that here")
+        save_mock.side_effect = exc
+        rv = client.post(
+            "/upload",
+            data={
+                "files[]": [(io.BytesIO(b"this is a test"), "test.pdf")],
+                "folder": 0,
+                "submit": "Upload",
+            },
+            follow_redirects=True,
+        )
+
+        assert rv.status_code == 200
+        folders_mock.assert_called_once()
+
+        log_mock.assert_called()
+        gu_mock.assert_called()
+        assert log_mock.call_count == 2
+        assert gu_mock.call_count == 2
+
+        save_mock.assert_called_once_with("/cloud/folder-1/test.pdf")
+        assert save_mock.call_count == 1
+
+        assert b"Permission Error" in rv.data
+        assert "PermissionError" in log_mock.call_args_list[-1][0][0]
+
     def test_multiple_files(self, client, upload_mocks):
         save_mock, folders_mock, log_mock, gu_mock = upload_mocks
 
