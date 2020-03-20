@@ -83,9 +83,11 @@ class TestUpload:
         save_mock.assert_called_with("/cloud/folder-3/test.rar")
         assert save_mock.call_count == 2
 
+        assert b"success" in rv.data
+        assert b"Files uploaded successfully" in rv.data
+
     def test_permission_error(self, client, upload_mocks):
         save_mock, folders_mock, log_mock, gu_mock = upload_mocks
-
 
         exc = PermissionError("You can't save that here")
         save_mock.side_effect = exc
@@ -111,6 +113,7 @@ class TestUpload:
         assert save_mock.call_count == 1
 
         assert b"Permission Error" in rv.data
+        assert b"danger" in rv.data
         assert "PermissionError" in log_mock.call_args_list[-1][0][0]
 
     def test_multiple_files(self, client, upload_mocks):
@@ -143,6 +146,9 @@ class TestUpload:
         gu_mock.assert_called()
         assert gu_mock.call_count == 2
 
+        assert b"success" in rv.data
+        assert b"Files uploaded successfully" in rv.data
+
     def test_no_files(self, client, upload_mocks):
         save_mock, folders_mock, log_mock, gu_mock = upload_mocks
 
@@ -154,6 +160,7 @@ class TestUpload:
 
         assert rv.status_code == 200
         assert b"No files supplied" in rv.data
+        assert b"danger" in rv.data
         save_mock.assert_not_called()
 
         folders_mock.assert_called_once()
@@ -173,6 +180,7 @@ class TestUpload:
 
         assert rv.status_code == 200
         assert b"Supplied only %d empty files" % nfiles in rv.data
+        assert b"danger" in rv.data
         save_mock.assert_not_called()
 
         folders_mock.assert_called_once()
@@ -201,6 +209,9 @@ class TestUpload:
         assert log_mock.call_count == 2
         assert gu_mock.call_count == 2
 
+        assert b"success" in rv.data
+        assert b"Files uploaded successfully" in rv.data
+
     def test_no_folder(self, client, upload_mocks):
         save_mock, folders_mock, log_mock, gu_mock = upload_mocks
 
@@ -215,6 +226,7 @@ class TestUpload:
 
         assert rv.status_code == 200
         assert b"No folder supplied" in rv.data
+        assert b"danger" in rv.data
         save_mock.assert_not_called()
         folders_mock.assert_not_called()
 
@@ -236,6 +248,7 @@ class TestUpload:
 
         assert rv.status_code == 200
         assert b"Invalid index folder" in rv.data
+        assert b"danger" in rv.data
         save_mock.assert_not_called()
         folders_mock.assert_called_once()
         log_mock.assert_called_once()
@@ -256,6 +269,7 @@ class TestUpload:
 
         assert rv.status_code == 200
         assert b"Invalid index folder" in rv.data
+        assert b"danger" in rv.data
         save_mock.assert_not_called()
         folders_mock.assert_called_once()
         log_mock.assert_called_once()
