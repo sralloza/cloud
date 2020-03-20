@@ -49,7 +49,7 @@ def upload_files():
         try:
             file.save(filename.as_posix())
         except PermissionError as exc:
-            flash("Permission Error: %s" % exc)
+            flash("Permission Error: %s" % exc, "danger")
             log("User %r encoutered a PermissionError: %r" % (get_user(), exc))
             return redirect("/")
 
