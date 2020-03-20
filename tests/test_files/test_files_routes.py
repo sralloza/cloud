@@ -142,7 +142,7 @@ class TestUpload:
         )
 
         assert rv.status_code == 200
-        assert b"Supplied only %d emtpy files" % nfiles in rv.data
+        assert b"Supplied only %d empty files" % nfiles in rv.data
         save_mock.assert_not_called()
 
         folders_mock.assert_called_once()

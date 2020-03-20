@@ -49,7 +49,7 @@ def upload_files():
         file.save(filename.as_posix())
 
     if not log_files:
-        flash("Supplied only %d emtpy files" % len(files), "danger")
+        flash("Supplied only %d empty files" % len(files), "danger")
         return redirect("/")
 
     log(
