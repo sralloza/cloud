@@ -42,16 +42,16 @@ def test_get_sudoers(mocker):
 
 @mock.patch("app.utils.cfg.IGNORED_PATH")
 class TestGetignored:
-    def test_normal(self, ignored_path_mock):
+    def test_normal(self, ign_path_m):
         data = ["bbb", "aaa"]
-        ignored_path_mock.read_text.return_value = json.dumps(data * 5)
+        ign_path_m.read_text.return_value = json.dumps(data * 5)
 
         ignored = get_ignored()
         data.sort()
         assert ignored == data
 
-    def test_error(self, ignored_path_mock):
-        ignored_path_mock.read_text.return_value = ""
+    def test_error(self, ign_path_m):
+        ign_path_m.read_text.return_value = ""
 
         with pytest.warns(IngoredWarning):
             ignored = get_ignored()
@@ -61,61 +61,61 @@ class TestGetignored:
 @mock.patch("app.utils.cfg.IGNORED_PATH")
 @mock.patch("app.utils.get_ignored")
 class TestAddToignored:
-    def test_true(self, ignored_mock, ignored_path_mock):
-        ignored_mock.return_value = ["aaa", "bbb"]
+    def test_true(self, ign_m, ign_path_m):
+        ign_m.return_value = ["aaa", "bbb"]
         result = add_to_ignored("ccc")
 
         expected_call = json.dumps(["aaa", "bbb", "ccc"], indent=4)
         assert result is True
-        ignored_path_mock.write_text.assert_called_once_with(expected_call)
+        ign_path_m.write_text.assert_called_once_with(expected_call)
 
-    def test_false(self, ignored_mock, ignored_path_mock):
-        ignored_mock.return_value = ["aaa", "bbb", "ccc"]
+    def test_false(self, ign_m, ign_path_m):
+        ign_m.return_value = ["aaa", "bbb", "ccc"]
         result = add_to_ignored("ccc")
 
         assert result is False
-        ignored_path_mock.write_text.assert_not_called()
+        ign_path_m.write_text.assert_not_called()
 
 
 @mock.patch("app.utils.cfg.IGNORED_PATH")
 @mock.patch("app.utils.get_ignored")
 class TestRemoveFromignored:
-    def test_true(self, ignored_mock, ignored_path_mock):
-        ignored_mock.return_value = ["aaa", "bbb", "ccc"]
+    def test_true(self, ign_m, ign_path_m):
+        ign_m.return_value = ["aaa", "bbb", "ccc"]
         result = remove_from_ignored("ccc")
 
         expected_call = json.dumps(["aaa", "bbb"], indent=4)
         assert result is True
-        ignored_path_mock.write_text.assert_called_once_with(expected_call)
+        ign_path_m.write_text.assert_called_once_with(expected_call)
 
-    def test_false(self, ignored_mock, ignored_path_mock):
-        ignored_mock.return_value = ["aaa", "bbb"]
+    def test_false(self, ign_m, ign_path_m):
+        ign_m.return_value = ["aaa", "bbb"]
         result = remove_from_ignored("ccd")
 
         assert result is False
-        ignored_path_mock.write_text.assert_not_called()
+        ign_path_m.write_text.assert_not_called()
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Does not work on linux")
 @mock.patch("app.utils.cfg", spec=True)
 @mock.patch("app.utils.request", spec=True)
 @mock.patch("app.utils.asctime", spec=True)
-def test_log(asctime_mock, request_mock, cfg_mock):
+def test_log(asc_m, req_m, cfg_m):
     str_time = datetime(2019, 1, 1).ctime()
-    asctime_mock.return_value = str_time
-    request_mock.remote_addr = "10.0.0.1"
-    fp = cfg_mock.LOG_PATH.open.return_value.__enter__.return_value
+    asc_m.return_value = str_time
+    req_m.remote_addr = "10.0.0.1"
+    fp = cfg_m.LOG_PATH.open.return_value.__enter__.return_value
 
     args = f"[{str_time}] - 10.0.0.1 - hello-world\n"
 
     log("hello-world")
-    asctime_mock.assert_called_once()
+    asc_m.assert_called_once()
     fp.write.assert_called_once_with(args)
 
     log("a=%s, b=%r, c=%03d", "letter-a", "letter-b", 10)
     args = f"[{str_time}] - 10.0.0.1 - a=letter-a, b='letter-b', c=010\n"
 
-    assert asctime_mock.call_count == 2
+    assert asc_m.call_count == 2
     fp.write.assert_called_with(args)
     assert fp.write.call_count == 2
 
@@ -123,18 +123,18 @@ def test_log(asctime_mock, request_mock, cfg_mock):
 @pytest.mark.skipif(sys.platform != "win32", reason="Does not work on linux")
 @mock.patch("app.utils.request", spec=True)
 class TestGetUser:
-    def test_no_authorization(self, request_mock):
-        request_mock.authorization = None
+    def test_no_authorization(self, req_m):
+        req_m.authorization = None
         assert get_user() is None
 
-    def test_normal_authorization(self, request_mock):
-        request_mock.authorization = mock.Mock(username="foo")
+    def test_normal_authorization(self, req_m):
+        req_m.authorization = mock.Mock(username="foo")
         assert get_user() == "foo"
 
-    def test_runtime_error(self, request_mock):
-        prop_mock = mock.PropertyMock()
-        prop_mock.side_effect = RuntimeError
-        type(request_mock).authorization = prop_mock
+    def test_runtime_error(self, req_m):
+        prop_m = mock.PropertyMock()
+        prop_m.side_effect = RuntimeError
+        type(req_m).authorization = prop_m
         assert get_user() is None
 
 
@@ -159,72 +159,48 @@ class TestGetFolders:
             "folder-2/subfolder-2.1",
         )
 
-    @pytest.fixture
-    def folders_mocker(self):
-        cfg_mock = mock.patch("app.utils.cfg", spec=True).start()
-        os_walk_mock = mock.patch("os.walk", spec=True).start()
-        get_user_mock = mock.patch("app.utils.get_user", spec=True).start()
-        sudoers_mock = mock.patch("app.utils.get_sudoers", spec=True).start()
-        ignored_mock = mock.patch("app.utils.get_ignored", spec=True).start()
+    @pytest.fixture(scope="function", autouse=True)
+    def mocks(self):
+        self.cfg_m = mock.patch("app.utils.cfg", spec=True).start()
+        self.walk_m = mock.patch("os.walk", spec=True).start()
+        self.gu_m = mock.patch("app.utils.get_user", spec=True).start()
+        self.sud_m = mock.patch("app.utils.get_sudoers", spec=True).start()
+        self.ign_m = mock.patch("app.utils.get_ignored", spec=True).start()
 
-        yield cfg_mock, os_walk_mock, get_user_mock, sudoers_mock, ignored_mock
+        yield
 
         mock.patch.stopall()
 
-    def test_no_sudores_or_ignored(self, folders_mocker):
-        (
-            cfg_mock,
-            os_walk_mock,
-            get_user_mock,
-            sudoers_mock,
-            ignored_mock,
-        ) = folders_mocker
-
-        cfg_mock.CLOUD_PATH = "/test"
-        os_walk_mock.return_value = self.input_data
-        get_user_mock.return_value = None
-        sudoers_mock.return_value = []
-        ignored_mock.return_value = []
+    def test_no_sudores_or_ignored(self):
+        self.cfg_m.CLOUD_PATH = "/test"
+        self.walk_m.return_value = self.input_data
+        self.gu_m.return_value = None
+        self.sud_m.return_value = []
+        self.ign_m.return_value = []
 
         expected = self.output_data[1:]
         real = tuple([x.as_posix() for x in get_folders()])
 
         assert real == expected
 
-    def test_sudoers(self, folders_mocker):
-        (
-            cfg_mock,
-            os_walk_mock,
-            get_user_mock,
-            sudoers_mock,
-            ignored_mock,
-        ) = folders_mocker
-
-        cfg_mock.CLOUD_PATH = "/test"
-        os_walk_mock.return_value = self.input_data
-        get_user_mock.return_value = "user"
-        sudoers_mock.return_value = ["user"]
-        ignored_mock.return_value = []
+    def test_sudoers(self):
+        self.cfg_m.CLOUD_PATH = "/test"
+        self.walk_m.return_value = self.input_data
+        self.gu_m.return_value = "user"
+        self.sud_m.return_value = ["user"]
+        self.ign_m.return_value = []
 
         expected = self.output_data
         real = tuple([x.as_posix() for x in get_folders()])
 
         assert real == expected
 
-    def test_ignored(self, folders_mocker):
-        (
-            cfg_mock,
-            os_walk_mock,
-            get_user_mock,
-            sudoers_mock,
-            ignored_mock,
-        ) = folders_mocker
-
-        cfg_mock.CLOUD_PATH = "/test"
-        os_walk_mock.return_value = self.input_data
-        get_user_mock.return_value = "user"
-        sudoers_mock.return_value = []
-        ignored_mock.return_value = ["folder-2"]
+    def test_ignored(self):
+        self.cfg_m.CLOUD_PATH = "/test"
+        self.walk_m.return_value = self.input_data
+        self.gu_m.return_value = "user"
+        self.sud_m.return_value = []
+        self.ign_m.return_value = ["folder-2"]
 
         expected = self.output_data[1:-2]
         real = tuple([x.as_posix() for x in get_folders()])
@@ -288,8 +264,8 @@ class TestGetPostArg:
     )
 
     @pytest.mark.parametrize("request_data, expected", data_req_strip)
-    def test_req_strip(self, request_mock, request_data, expected):
-        request_mock.form = request_data
+    def test_req_strip(self, req_m, request_data, expected):
+        req_m.form = request_data
         if expected == RuntimeError:
             with pytest.raises(expected):
                 get_post_arg("data", required=True, strip=True)
@@ -297,13 +273,13 @@ class TestGetPostArg:
             assert get_post_arg("data", required=True, strip=True) == expected
 
     @pytest.mark.parametrize("request_data, expected", data_not_req_strip)
-    def test_not_req_strip(self, request_mock, request_data, expected):
-        request_mock.form = request_data
+    def test_not_req_strip(self, req_m, request_data, expected):
+        req_m.form = request_data
         assert get_post_arg("data", required=False, strip=True) == expected
 
     @pytest.mark.parametrize("request_data, expected", data_req_not_strip)
-    def test_req_not_strip(self, request_mock, request_data, expected):
-        request_mock.form = request_data
+    def test_req_not_strip(self, req_m, request_data, expected):
+        req_m.form = request_data
         if expected == RuntimeError:
             with pytest.raises(expected):
                 get_post_arg("data", required=True, strip=False)
@@ -311,6 +287,6 @@ class TestGetPostArg:
             assert get_post_arg("data", required=True, strip=False) == expected
 
     @pytest.mark.parametrize("request_data, expected", data_not_req_not_strip)
-    def test_not_req_not_strip(self, request_mock, request_data, expected):
-        request_mock.form = request_data
+    def test_not_req_not_strip(self, req_m, request_data, expected):
+        req_m.form = request_data
         assert get_post_arg("data", required=False, strip=False) == expected

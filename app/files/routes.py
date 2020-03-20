@@ -46,10 +46,15 @@ def upload_files():
 
         log_files.append(filename)
         filename = cfg.CLOUD_PATH / folder / filename
-        file.save(filename.as_posix())
+        try:
+            file.save(filename.as_posix())
+        except PermissionError as exc:
+            flash("Permission Error: %s" % exc, "danger")
+            log("User %r encoutered a PermissionError: %r" % (get_user(), exc))
+            return redirect("/")
 
     if not log_files:
-        flash("Supplied only %d emtpy files" % len(files), "danger")
+        flash("Supplied only %d empty files" % len(files), "danger")
         return redirect("/")
 
     log(
